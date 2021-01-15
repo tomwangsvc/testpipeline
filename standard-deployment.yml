@@ -1,5 +1,5 @@
 parameters:
-- name: postDeploySteps
+- name: usersteps
   type: stepList
   default: []
 
@@ -70,5 +70,5 @@ jobs:
             commandOptions: 'tfplan'
             environmentServiceNameAWS: '$(TF_SERVICE_CONNECTOR)'
 
-        ${{ each step in parameters.postDeploySteps }}:
-        - ${{ step }}
+        - ${{ each step in parameters.usersteps }}:
+          - ${{ step }}
