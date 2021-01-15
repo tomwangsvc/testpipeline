@@ -1,0 +1,74 @@
+parameters:
+- name: postDeploySteps
+  type: stepList
+  default: []
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- template: helpers/select-environment.yml
+  parameters:
+    sourceBranchName: '$(Build.SourceBranchName)'
+    buildReason: '$(Build.Reason)'
+
+jobs:
+- deployment: DeployInfrastructure
+  displayName: 'Deploy Infrastructure'
+  environment: '$(ENVIRONMENT_NAME)'
+  variables:
+  - template: helpers/terraform-environment.yml
+    parameters:
+      AWS_ACCOUNT: '$(AWS_ACCOUNT)'  
+      AWS_REGION: '$(AWS_REGION)'
+      ENVIRONMENT_NAME: '$(ENVIRONMENT_NAME)'
+      localPath: '$(Build.Repository.LocalPath)'
+      repoName: '$(Build.Repository.Name)'
+
+  strategy:
+    runOnce:
+      deploy:  
+        steps:
+        - checkout: self
+
+        - task: TerraformInstaller@0
+          displayName: 'Install Terraform'
+          condition: ne('${{ variables.TF_VERSION }}', '')
+          inputs:
+            terraformVersion: '$(TF_VERSION)'
+
+        - task: TerraformTaskV1@0
+          displayName: 'Initialise Terraform'
+          inputs:
+            provider: '$(TF_PROVIDER)'
+            command: 'init'
+            workingDirectory: '$(TF_PATH)'
+            commandOptions: '-backend-config=role_arn=$(TF_ROLE_ARN)'
+            backendServiceAWS: '$(TF_SERVICE_CONNECTOR)'
+            backendAWSBucketName: '$(TF_BACKEND_BUCKET)'
+            backendAWSKey: '$(TF_BACKEND_KEY)'
+
+        - task: TerraformTaskV1@0
+          displayName: 'Plan Terraform'
+          env:
+            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+          inputs:
+            provider: '$(TF_PROVIDER)'
+            command: 'plan'
+            workingDirectory: '$(TF_PATH)'
+            commandOptions: '-out=tfplan -var-file=$(TF_VAR_FILE)'
+            environmentServiceNameAWS: '$(TF_SERVICE_CONNECTOR)'
+
+        - task: TerraformTaskV1@0
+          displayName: 'Apply Terraform'
+          env:
+            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+          inputs:
+            provider: '$(TF_PROVIDER)'
+            command: 'apply'
+            workingDirectory: '$(TF_PATH)'
+            commandOptions: 'tfplan'
+            environmentServiceNameAWS: '$(TF_SERVICE_CONNECTOR)'
+
+        ${{ each step in parameters.postDeploySteps }}:
+        - ${{ step }}

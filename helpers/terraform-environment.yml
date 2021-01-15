@@ -1,0 +1,21 @@
+# Used to inject terraform environment variables into the pipeline
+parameters:
+- name: AWS_ACCOUNT 
+- name: AWS_REGION
+- name: ENVIRONMENT_NAME
+- name: localPath
+- name: repoName
+
+variables:
+  TF_VERSION: '0.14.4'
+  TF_PROVIDER: 'aws'
+  TF_IN_AUTOMATION: true
+  TF_INPUT: false
+  TF_BACKEND_BUCKET: '${{ parameters.AWS_ACCOUNT }}-state'
+  TF_BACKEND_KEY: '${{ parameters.repoName }}.tfstate'
+  TF_PATH: '${{ parameters.localPath }}/terraform'
+  TF_ROLE_ARN: 'arn:aws:iam::${{ parameters.AWS_ACCOUNT }}:role/wsl_role_deploy_Infrastructure'
+  TF_VAR_AWS_ACCOUNT: '${{ parameters.AWS_ACCOUNT }}'
+  TF_VAR_AWS_REGION: '${{ parameters.AWS_REGION }}'
+  TF_VAR_ENVIRONMENT: '${{ parameters.ENVIRONMENT_NAME }}'
+  TF_VAR_FILE: ./tfvars/${{ parameters.ENVIRONMENT_NAME }}.tfvars

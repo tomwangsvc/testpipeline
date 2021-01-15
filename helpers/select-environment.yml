@@ -1,0 +1,13 @@
+parameters:
+- name: sourceBranchName 
+- name: buildReason
+
+variables:
+- ${{ if and(ne(parameters.sourceBranchName, 'master'), ne(parameters.buildReason, 'PullRequest')) }}:
+  - group: 'DEV'
+
+- ${{ if and(ne(parameters.sourceBranchName, 'master'), eq(parameters.buildReason, 'PullRequest')) }}:
+  - group: 'QA'
+
+- ${{ if eq(parameters.sourceBranchName, 'master') }}:
+  - group: 'UAT'
