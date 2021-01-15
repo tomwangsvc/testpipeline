@@ -3,9 +3,6 @@ parameters:
   type: stepList
   default: []
 
-pool:
-  vmImage: 'ubuntu-latest'
-
 variables:
 - template: helpers/select-environment.yml
   parameters:
