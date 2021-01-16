@@ -4,6 +4,7 @@ parameters:
   default: []
 - name: terraformVersion
   type: string
+  default: ''
 
 variables:
 - template: helpers/select-environment.yml
