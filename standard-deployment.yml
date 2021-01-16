@@ -60,7 +60,11 @@ stages:
           commandOptions: -out=tfplan -var-file=$(TF_VAR_FILE)
           environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-      - publish: $(TerraformPlan.jsonPlanFilePath)
+      - script: mv $(TerraformPlan.jsonPlanFilePath) tf-plan.json
+        name: GetTFPlanJsonFileName
+        displayName: Get Terraform JSON Plan
+
+      - publish: tf-plan.json
         artifact: tf-plan-json-$(ENVIRONMENT_NAME)
         displayName: Publish Terraform Plan (JSON)
 
