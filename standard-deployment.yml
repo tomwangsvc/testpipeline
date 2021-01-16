@@ -15,15 +15,16 @@ variables:
     sourceBranchName: $(Build.SourceBranchName)
     buildReason: $(Build.Reason)
 
-- template: helpers/terraform-environment.yml
-  parameters:
-    AWS_ACCOUNT: $(AWS_ACCOUNT)  
-    AWS_REGION: $(AWS_REGION)
-    ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
-    localPath: $(Build.Repository.LocalPath)
-    projectName: $(System.TeamProject)
-    repoName: $(Build.Repository.Name)
-    terraformVersion: ${{ parameters.terraformVersion }}
+- ${{ if eq(parameters.useTerraform, true) }}:
+  - template: helpers/terraform-environment.yml
+    parameters:
+      AWS_ACCOUNT: $(AWS_ACCOUNT)  
+      AWS_REGION: $(AWS_REGION)
+      ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
+      localPath: $(Build.Repository.LocalPath)
+      projectName: $(System.TeamProject)
+      repoName: $(Build.Repository.Name)
+      terraformVersion: ${{ parameters.terraformVersion }}
 
 stages:
 - stage: Validate
