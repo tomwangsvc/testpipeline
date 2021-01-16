@@ -33,7 +33,7 @@ jobs:
 
   strategy:
     runOnce:
-      deploy:  
+      preDeploy:  
         steps:
         - checkout: self
 
@@ -86,15 +86,7 @@ jobs:
           - publish: $(TerraformApply.jsonOutputVariablesPath)
             artifact: terraform-apply-$(ENVIRONMENT_NAME)
             displayName: Publish Terraform Output
-
-- deployment: Provision 
-  displayName: Provision
-  dependsOn: 
-  - ${{ if eq(parameters.useTerraform, true) }}:
-    - DeployInfrastructure
-  environment: $(ENVIRONMENT_NAME)
-  strategy:
-    runOnce:
+            
       deploy:  
         steps:
         - checkout: self
