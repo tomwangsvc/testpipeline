@@ -37,7 +37,7 @@ jobs:
 
         - task: TerraformInstaller@0
           displayName: 'Install Terraform'
-          condition: ne(${{ variables.TF_VERSION }}, '')
+          condition: ne('${{ variables.TF_VERSION }}', '')
           inputs:
             terraformVersion: $(TF_VERSION)
 
