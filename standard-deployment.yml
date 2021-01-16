@@ -34,7 +34,7 @@ stages:
             terraformVersion: ${{ parameters.terraformVersion }}
       steps:
       - task: TerraformInstaller@0
-        displayName: 'Install Terraform'
+        displayName: Install Terraform
         condition: ne('${{ variables.TF_VERSION }}', '')
         inputs:
           terraformVersion: $(TF_VERSION)
@@ -61,13 +61,16 @@ stages:
           environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
       - publish: $(TerraformPlan.jsonPlanFilePath)
-        artifact: terraform-plan-$(ENVIRONMENT_NAME)
-        displayName: Publish Terraform Plan
+        artifact: tf-plan-json-$(ENVIRONMENT_NAME)
+        displayName: Publish Terraform Plan (JSON)
+
+      - publish: $(TF_PATH)/tfplan
+        artifact: tfplan-$(ENVIRONMENT_NAME)
+        displayName: Publish Terraform Plan (tfplan)
 
 - stage: Deploy
   jobs:
-  - deployment: DeployInfrastructure
-    displayName: Deploy Infrastructure
+  - deployment: Deploy
     environment: $(ENVIRONMENT_NAME)
     variables:
     - ${{ if eq(parameters.useTerraform, true) }}:
@@ -82,13 +85,17 @@ stages:
           terraformVersion: ${{ parameters.terraformVersion }}
     strategy:
       runOnce:
-        preDeploy:  
-          steps:
-          - checkout: self
+        ${{ if eq(parameters.useTerraform, true) }}:
+          preDeploy:  
+            steps:
+            - checkout: self
 
-          - ${{ if eq(parameters.useTerraform, true) }}:
+            - download: current
+              artifact: tfplan-$(ENVIRONMENT_NAME)
+              displayName: Get tfplan
+
             - task: TerraformInstaller@0
-              displayName: 'Install Terraform'
+              displayName: Install Terraform
               condition: ne('${{ variables.TF_VERSION }}', '')
               inputs:
                 terraformVersion: $(TF_VERSION)
@@ -111,16 +118,20 @@ stages:
                 provider: $(TF_PROVIDER)
                 command: apply
                 workingDirectory: $(TF_PATH)
-                # commandOptions: tfplan
+                commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
                 environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
             - publish: $(TerraformApply.jsonOutputVariablesPath)
-              artifact: terraform-apply-$(ENVIRONMENT_NAME)
+              artifact: terraform-output-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
 
         deploy:  
           steps:
           - checkout: self
+
+          - download: current
+              artifact: terraform-output-$(ENVIRONMENT_NAME)
+              displayName: Get Terraform Outputs
 
           - ${{ each step in parameters.usersteps }}:
             - ${{ step }}
