@@ -56,14 +56,16 @@ stages:
           provider: $(TF_PROVIDER)
           command: plan
           workingDirectory: $(TF_PATH)
-          commandOptions: -out=/tmp/tfplan -var-file=$(TF_VAR_FILE)
+          commandOptions: -out=$(Pipeline.Workspace)/tfplan -var-file=$(TF_VAR_FILE)
           environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-      - script: mv $(TerraformPlan.jsonPlanFilePath) /tmp/tfplan.json
+      - script: ls $(Pipeline.Workspace)
+
+      - script: mv $(TerraformPlan.jsonPlanFilePath) $(Pipeline.Workspace)/tfplan.json
         name: GetTFPlanJson
         displayName: Get tfplan.json
 
-      - publish: /tmp
+      - publish: $(Pipeline.Workspace)
         artifact: tfplan-$(ENVIRONMENT_NAME)
         displayName: Publish Terraform Plan (JSON)
 
