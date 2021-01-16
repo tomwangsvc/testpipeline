@@ -100,7 +100,7 @@ stages:
               parameters:
                 artifactName: tfoutput-$(ENVIRONMENT_NAME)
                 steps: 
-                - script: mv $(TerraformApply.jsonOutputVariablesPath) $(artifactDirectory.path)/tf-output.json
+                - script: mv $(TerraformApply.jsonOutputVariablesPath) $(artifactDirectory.path)/tfoutput.json
                   name: GetTFOutputFileName
                   displayName: Get Terraform Output
 
