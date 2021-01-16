@@ -55,7 +55,7 @@ stages:
         displayName: Publish Terraform Plan
 
 - stage: Deploy
-  displayName: Deploy (${{ variables['ENVIRONMENT_NAME'] }})
+  displayName: Deploy (${{ variables.ENVIRONMENT_NAME }})
   jobs:
   - deployment: Deploy
     environment: $(ENVIRONMENT_NAME)
