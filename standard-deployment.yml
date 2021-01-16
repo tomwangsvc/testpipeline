@@ -48,6 +48,13 @@ stages:
           backendServiceAWS: $(TF_SERVICE_CONNECTOR)
           backendAWSBucketName: $(TF_BACKEND_BUCKET)
           backendAWSKey: $(TF_BACKEND_KEY)
+          
+      - script: |
+          path=$(System.DefaultWorkingDirectory)/terraform
+          mkdir $path
+          echo "##vso[task.setvariable variable=path;isOutput=true]$path"
+        name: artifactDirectory
+        displayName: Make Artifact Directory
 
       - task: TerraformTaskV1@0
         displayName: Plan Terraform
@@ -56,18 +63,18 @@ stages:
           provider: $(TF_PROVIDER)
           command: plan
           workingDirectory: $(TF_PATH)
-          commandOptions: -out=$(Pipeline.Workspace)/tfplan -var-file=$(TF_VAR_FILE)
+          commandOptions: -out=$(artifactDirectory.path)/tfplan -var-file=$(TF_VAR_FILE)
           environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-      - script: ls $(Pipeline.Workspace)
+      - script: ls $(artifactDirectory.path)
 
-      - script: mv $(TerraformPlan.jsonPlanFilePath) $(Pipeline.Workspace)/tfplan.json
+      - script: mv $(TerraformPlan.jsonPlanFilePath) $(artifactDirectory.path)/tfplan.json
         name: GetTFPlanJson
         displayName: Get tfplan.json
 
-      - publish: $(Pipeline.Workspace)
+      - publish: $(artifactDirectory.path)
         artifact: tfplan-$(ENVIRONMENT_NAME)
-        displayName: Publish Terraform Plan (JSON)
+        displayName: Publish tfplan.json
 
 - stage: Deploy
   jobs:
