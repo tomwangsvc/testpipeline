@@ -89,6 +89,9 @@ jobs:
 
 - deployment: Provision 
   displayName: Provision
+  dependsOn: 
+  - ${{ if eq(parameters.useTerraform, true) }}:
+    - DeployInfrastructure
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:
