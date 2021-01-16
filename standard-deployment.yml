@@ -11,9 +11,6 @@ parameters:
 
 variables:
 - template: helpers/select-environment.yml
-  parameters:
-    sourceBranchName: $(Build.SourceBranchName)
-    buildReason: $(Build.Reason)
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - template: helpers/terraform-environment.yml
