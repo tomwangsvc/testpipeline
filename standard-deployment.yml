@@ -19,7 +19,7 @@ stages:
 - stage: Validate
   jobs:
   - ${{ if eq(parameters.useTerraform, true) }}:
-    - job: CheckTerraform
+    - job: TerraformPlan
       displayName: Terraform Plan
       variables:
       - template: helpers/terraform-environment.yml
