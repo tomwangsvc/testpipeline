@@ -121,14 +121,13 @@ stages:
                 commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
                 environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-            - publish: $(TerraformApply.jsonOutputVariablesPath)
+            - script: mv $(TerraformApply.jsonOutputVariablesPath) tf-output.json
+              name: GetTFOutputFileName
+              displayName: Get Terraform Output
+
+            - publish: tf-output.json
               artifact: terraform-output-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
-
-            - script: echo "##vso[task.setvariable variable=fileName;isOutput=true]$(TerraformApply.jsonOutputVariablesPath)"
-              name: GetTFOutputFileName
-
-            - script: echo $(GetTFOutputFileName.fileName)
 
         deploy:  
           steps:
