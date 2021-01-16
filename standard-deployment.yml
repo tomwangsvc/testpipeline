@@ -24,6 +24,7 @@ variables:
       AWS_REGION: $(AWS_REGION)
       ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
       repoName: $(Build.Repository.Name)
+      sourcesDirectory: $(Build.SourcesDirectory)
       terraformVersion: ${{ parameters.terraformVersion }}
 
 stages:
