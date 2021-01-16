@@ -68,7 +68,7 @@ jobs:
               environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
           - publish: $(TerraformPlan.jsonPlanFilePath)
-            artifact: terraform-$(ENVIRONMENT_NAME)
+            artifact: terraform-plan-$(ENVIRONMENT_NAME)
             displayName: Publish Terraform Plan
 
           - task: TerraformTaskV1@0
@@ -84,7 +84,7 @@ jobs:
               environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
           - publish: $(TerraformApply.jsonOutputVariablesPath)
-            artifact: terraform-$(ENVIRONMENT_NAME)
+            artifact: terraform-apply-$(ENVIRONMENT_NAME)
             displayName: Publish Terraform Output
 
         - ${{ each step in parameters.usersteps }}:
