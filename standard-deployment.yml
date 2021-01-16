@@ -89,3 +89,15 @@ jobs:
 
         - ${{ each step in parameters.usersteps }}:
           - ${{ step }}
+
+- deployment: Provision 
+  displayName: Provision
+  environment: $(ENVIRONMENT_NAME)
+  strategy:
+    runOnce:
+      deploy:  
+        steps:
+        - checkout: self
+
+        - ${{ each step in parameters.usersteps }}:
+          - ${{ step }}
