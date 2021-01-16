@@ -128,6 +128,8 @@ stages:
             - script: echo "##vso[task.setvariable variable=fileName;isOutput=true]$(TerraformApply.jsonOutputVariablesPath)"
               name: GetTFOutputFileName
 
+            - script: echo $(GetTFOutputFileName.fileName)
+
         deploy:  
           steps:
           - checkout: self
