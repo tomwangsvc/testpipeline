@@ -28,11 +28,11 @@ jobs:
         steps:
         - checkout: self
 
-        - task: TerraformInstaller@0
-          displayName: 'Install Terraform'
-          condition: ne('${{ variables.TF_VERSION }}', '')
-          inputs:
-            terraformVersion: '$(TF_VERSION)'
+        # - task: TerraformInstaller@0
+        #   displayName: 'Install Terraform'
+        #   condition: ne('${{ variables.TF_VERSION }}', '')
+        #   inputs:
+        #     terraformVersion: '$(TF_VERSION)'
 
         - task: TerraformTaskV1@0
           displayName: 'Initialise Terraform'
