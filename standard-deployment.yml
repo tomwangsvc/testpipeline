@@ -31,8 +31,6 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
-      variables:
-      
       steps:
       - template: helpers/terraform-steps.yml
         parameters:
