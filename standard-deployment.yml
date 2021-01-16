@@ -50,7 +50,7 @@ stages:
           backendAWSKey: $(TF_BACKEND_KEY)
           
       - script: |
-          path=$(System.DefaultWorkingDirectory)/terraform
+          path=$(Pipeline.Workspace)/$(System.JobId)
           mkdir $path
           echo "##vso[task.setvariable variable=path;isOutput=true]$path"
         name: artifactDirectory
@@ -74,7 +74,7 @@ stages:
 
       - publish: $(artifactDirectory.path)
         artifact: tfplan-$(ENVIRONMENT_NAME)
-        displayName: Publish tfplan.json
+        displayName: Publish Terraform Plan
 
 - stage: Deploy
   jobs:
