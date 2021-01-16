@@ -20,6 +20,7 @@ parameters:
   - 'azurerm'
 - name: terraformVersion
   type: string
+  default: ''
 
 variables:
   TF_PROVIDER: ${{ parameters.terraformProvider }}
