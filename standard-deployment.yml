@@ -1,4 +1,7 @@
 parameters:
+- name: defaultBranchName
+  type: string
+  default: 'master'
 - name: useTerraform
   type: boolean
   default: true
@@ -11,6 +14,8 @@ parameters:
 
 variables:
 - template: helpers/select-environment.yml
+  parameters:
+    defaultBranchName: ${{ parameters.defaultBranchName }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - template: helpers/terraform-environment.yml
