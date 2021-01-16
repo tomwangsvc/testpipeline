@@ -1,14 +1,29 @@
 # Used to inject terraform environment variables into the pipeline
 parameters:
 - name: AWS_ACCOUNT 
+  type: string
 - name: AWS_REGION
+  type: string
 - name: ENVIRONMENT_NAME
+  type: string
 - name: localPath
+  type: string
+- name: projectName
+  type: string
 - name: repoName
+  type: string
+- name: terraformProvider
+  type: string
+  default: 'aws'
+  values: 
+  - 'aws'
+  - 'azurerm'
+- name: terraformVersion
+  type: string
 
 variables:
-  TF_VERSION: '0.13.0'
-  TF_PROVIDER: 'aws'
+  TF_PROVIDER: ${{ parameters.terraformProvider }}
+  TF_VERSION: ${{ parameters.terraformVersion }}
   TF_IN_AUTOMATION: true
   TF_INPUT: false
   TF_BACKEND_BUCKET: '${{ parameters.AWS_ACCOUNT }}-state'
