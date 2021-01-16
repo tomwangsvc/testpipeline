@@ -1,7 +1,7 @@
 parameters:
 - name: defaultBranchName
   type: string
-  default: ${{ parameters.defaultBranchName }}
+  default: 'master'
 
 variables:
 - ${{ if and(ne(variables['Build.Build.SourceBranchName'], '${{ parameters.defaultBranchName }}'), ne(variables['Build.Reason'], 'PullRequest')) }}:
