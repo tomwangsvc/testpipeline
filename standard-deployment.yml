@@ -133,7 +133,7 @@ stages:
           - checkout: self
 
           - download: current
-            artifact: terraform-output-$(ENVIRONMENT_NAME)
+            artifact: tfoutput-$(ENVIRONMENT_NAME)
             displayName: Get Terraform Outputs
 
           - ${{ each step in parameters.usersteps }}:
