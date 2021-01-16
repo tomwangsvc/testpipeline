@@ -56,6 +56,10 @@ jobs:
             commandOptions: '-out=tfplan -var-file=$(TF_VAR_FILE)'
             environmentServiceNameAWS: '$(TF_SERVICE_CONNECTOR)'
 
+        - publish: '$(TF_PATH)/tfplan'
+          artifact: 'tfplan-$(ENVIRONMENT_NAME)'
+          displayName: Publish Terraform Plan
+
         - task: TerraformTaskV1@0
           displayName: 'Apply Terraform'
           name: TerraformApply
