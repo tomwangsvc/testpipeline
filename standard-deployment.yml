@@ -87,9 +87,6 @@ jobs:
             artifact: terraform-apply-$(ENVIRONMENT_NAME)
             displayName: Publish Terraform Output
 
-        - ${{ each step in parameters.usersteps }}:
-          - ${{ step }}
-
 - deployment: Provision 
   displayName: Provision
   environment: $(ENVIRONMENT_NAME)
