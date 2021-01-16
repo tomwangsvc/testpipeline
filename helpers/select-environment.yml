@@ -3,11 +3,11 @@ parameters:
 - name: buildReason
 
 variables:
-- ${{ if and(ne(variables.Build.SourceBranchName, 'master'), ne(parameters.buildReason, 'PullRequest')) }}:
+- ${{ if and(ne(Build.SourceBranchName, 'master'), ne(parameters.buildReason, 'PullRequest')) }}:
   - group: 'DEV'
 
-- ${{ if and(ne(parameters.sourceBranchName, 'master'), eq(parameters.buildReason, 'PullRequest')) }}:
+- ${{ if and(ne(Build.SourceBranchName, 'master'), eq(parameters.buildReason, 'PullRequest')) }}:
   - group: 'QA'
 
-- ${{ if eq(parameters.sourceBranchName, 'master') }}:
+- ${{ if eq(Build.SourceBranchName, 'master') }}:
   - group: 'UAT'
