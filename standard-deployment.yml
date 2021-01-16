@@ -20,7 +20,7 @@ stages:
   jobs:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: CheckTerraform
-      displayName: Check Terraform
+      displayName: Terraform Plan
       variables:
       - ${{ if eq(parameters.useTerraform, true) }}:
         - template: helpers/terraform-environment.yml
@@ -124,6 +124,9 @@ stages:
             - publish: $(TerraformApply.jsonOutputVariablesPath)
               artifact: terraform-output-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
+
+            - script: echo "##vso[task.setvariable variable=fileName;isOutput=true]$(TerraformApply.jsonOutputVariablesPath)"
+              name: GetTFOutputFileName
 
         deploy:  
           steps:
