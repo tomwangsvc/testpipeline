@@ -1,13 +1,14 @@
 parameters:
-- name: sourceBranchName 
-- name: buildReason
+- name: defaultBranchName
+  type: string
+  default: 'master'
 
 variables:
-- ${{ if and(ne(parameters.sourceBranchName, 'master'), ne(parameters.buildReason, 'PullRequest')) }}:
+- ${{ if and(ne(variables['Build.Build.SourceBranchName'], 'master'), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - group: 'DEV'
 
-- ${{ if and(ne(parameters.sourceBranchName, 'master'), eq(parameters.buildReason, 'PullRequest')) }}:
+- ${{ if and(ne(variables['Build.Build.SourceBranchName'], 'master'), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - group: 'QA'
 
-- ${{ if eq(parameters.sourceBranchName, 'master') }}:
+- ${{ if eq(variables['Build.Build.SourceBranchName'], 'master') }}:
   - group: 'UAT'
