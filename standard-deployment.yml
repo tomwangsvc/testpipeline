@@ -34,7 +34,6 @@ stages:
       steps:
       - template: helpers/terraform-steps.yml
         parameters:
-          terraformVersion: ${{ parameters.terraformVersion }}
           steps: 
           - template: helpers/publish-artifacts.yml
             parameters:
@@ -69,40 +68,26 @@ stages:
               artifact: tfplan-$(ENVIRONMENT_NAME)
               displayName: Get tfplan
 
-            - task: TerraformInstaller@0
-              displayName: Install Terraform
-              condition: ne('${{ variables.TF_VERSION }}', '')
-              inputs:
-                terraformVersion: $(TF_VERSION)
-
-            - task: TerraformTaskV1@0
-              displayName: Initialise Terraform
-              inputs:
-                provider: $(TF_PROVIDER)
-                command: init
-                workingDirectory: $(TF_PATH)
-                commandOptions: -backend-config=role_arn=$(TF_ROLE_ARN)
-                backendServiceAWS: $(TF_SERVICE_CONNECTOR)
-                backendAWSBucketName: $(TF_BACKEND_BUCKET)
-                backendAWSKey: $(TF_BACKEND_KEY)
-
-            - task: TerraformTaskV1@0
-              displayName: Apply Terraform
-              name: TerraformApply
-              inputs:
-                provider: $(TF_PROVIDER)
-                command: apply
-                workingDirectory: $(TF_PATH)
-                commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
-                environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
-
-            - template: helpers/publish-artifacts.yml
+            - template: helpers/terraform-steps.yml
               parameters:
-                artifactName: tfoutput-$(ENVIRONMENT_NAME)
                 steps: 
-                - script: mv $(TerraformApply.jsonOutputVariablesPath) $(artifactDirectory.path)/tfoutput.json
-                  name: GetTFOutputFileName
-                  displayName: Get Terraform Output
+                - task: TerraformTaskV1@0
+                  displayName: Apply Terraform
+                  name: TerraformApply
+                  inputs:
+                    provider: $(TF_PROVIDER)
+                    command: apply
+                    workingDirectory: $(TF_PATH)
+                    commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
+                    environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
+
+                - template: helpers/publish-artifacts.yml
+                  parameters:
+                    artifactName: tfoutput-$(ENVIRONMENT_NAME)
+                    steps: 
+                    - script: mv $(TerraformApply.jsonOutputVariablesPath) $(artifactDirectory.path)/tfoutput.json
+                      name: GetTFOutputFileName
+                      displayName: Get Terraform Output
 
         deploy:  
           steps:
