@@ -38,7 +38,6 @@ jobs:
         - checkout: self
 
         - ${{ if eq(parameters.useTerraform, true) }}:
-
           - task: TerraformInstaller@0
             displayName: 'Install Terraform'
             condition: ne('${{ variables.TF_VERSION }}', '')
@@ -69,7 +68,7 @@ jobs:
               environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
           - publish: $(TerraformPlan.jsonPlanFilePath)
-            artifact: tfplan-$(ENVIRONMENT_NAME)
+            artifact: terraform-$(ENVIRONMENT_NAME)
             displayName: Publish Terraform Plan
 
           - task: TerraformTaskV1@0
@@ -83,6 +82,10 @@ jobs:
               workingDirectory: $(TF_PATH)
               commandOptions: tfplan
               environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
+
+          - publish: $(TerraformApply.jsonOutputVariablesPath)
+            artifact: terraform-$(ENVIRONMENT_NAME)
+            displayName: Publish Terraform Output
 
         - ${{ each step in parameters.usersteps }}:
           - ${{ step }}
