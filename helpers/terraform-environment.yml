@@ -1,14 +1,10 @@
 # Used to inject terraform environment variables into the pipeline
 parameters:
+- name: AWS_ACCOUNT 
+  type: string
 - name: AWS_REGION
   type: string
 - name: ENVIRONMENT_NAME
-  type: string
-- name: localPath
-  type: string
-- name: projectName
-  type: string
-- name: repoName
   type: string
 - name: terraformProvider
   type: string
@@ -25,12 +21,12 @@ variables:
   TF_VERSION: ${{ parameters.terraformVersion }}
   TF_IN_AUTOMATION: true
   TF_INPUT: false
-  TF_BACKEND_BUCKET: ${{ variables['AWS_ACCOUNT'] }}-state
-  TF_BACKEND_KEY: '${{ parameters.repoName }}.tfstate'
-  TF_PATH: '${{ parameters.localPath }}/terraform'
-  TF_ROLE_ARN: arn:aws:iam::${{ variables['AWS_ACCOUNT'] }}:role/wsl_role_deploy_Infrastructure
-  TF_VAR_AWS_ACCOUNT: ${{ variables['AWS_ACCOUNT'] }}
-  TF_VAR_AWS_REGION: '${{ parameters.AWS_REGION }}'
-  TF_VAR_ENVIRONMENT: '${{ parameters.ENVIRONMENT_NAME }}'
-  TF_VAR_PROJECT: $(System.TeamProject)
+  TF_BACKEND_BUCKET: ${{ parameters.AWS_ACCOUNT }}-state
+  TF_BACKEND_KEY: ${{ variables['Build.Repository.Name'] }}.tfstate
+  TF_PATH: ${{ variables['Build.Repository.LocalPath'] }}/terraform
+  TF_ROLE_ARN: arn:aws:iam::${{ parameters.AWS_ACCOUNT }}:role/wsl_role_deploy_Infrastructure
+  TF_VAR_AWS_ACCOUNT: ${{ parameters.AWS_ACCOUNT }}
+  TF_VAR_AWS_REGION: ${{ parameters.AWS_REGION }}
+  TF_VAR_ENVIRONMENT: ${{ parameters.ENVIRONMENT_NAME }}
+  TF_VAR_PROJECT: ${{ variables['System.TeamProject'] }}
   TF_VAR_FILE: ./tfvars/${{ parameters.ENVIRONMENT_NAME }}.tfvars
