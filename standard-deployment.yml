@@ -47,6 +47,7 @@ jobs:
 
         - task: TerraformTaskV1@0
           displayName: 'Plan Terraform'
+          name: TerraformPlan
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
           inputs:
@@ -56,7 +57,7 @@ jobs:
             commandOptions: '-out=tfplan -var-file=$(TF_VAR_FILE)'
             environmentServiceNameAWS: '$(TF_SERVICE_CONNECTOR)'
 
-        - publish: '$(TF_PATH)/tfplan'
+        - publish: $(TerraformPlan.jsonPlanFilePath)
           artifact: 'tfplan-$(ENVIRONMENT_NAME)'
           displayName: Publish Terraform Plan
 
