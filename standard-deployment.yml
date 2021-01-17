@@ -5,9 +5,6 @@ parameters:
 - name: useTerraform
   type: boolean
   default: true
-- name: usersteps
-  type: stepList
-  default: []
 - name: terraformVersion
   type: string
   default: ''
@@ -97,5 +94,6 @@ stages:
             artifact: tfoutput-$(ENVIRONMENT_NAME)
             displayName: Get Terraform Outputs
 
-          - ${{ each step in parameters.usersteps }}:
-            - ${{ step }}
+          - script: printenv
+          
+          - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
