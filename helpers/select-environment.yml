@@ -4,11 +4,11 @@ parameters:
   default: 'master'
 
 variables:
-- ${{ if and(ne(variables['Build.SourceBranchName'], '${{ parameters.defaultBranchName }}'), ne(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - group: 'DEV'
 
-- ${{ if and(ne(variables['Build.SourceBranchName'], '${{ parameters.defaultBranchName }}'), eq(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - group: 'QA'
 
-- ${{ if eq(variables['Build.SourceBranchName'], '${{ parameters.defaultBranchName }}') }}:
+- ${{ if eq(variables['Build.SourceBranchName'], parameters.defaultBranchName) }}:
   - group: 'UAT'
