@@ -10,5 +10,8 @@ variables:
 - ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - group: 'QA'
 
-- ${{ if eq(variables['Build.SourceBranchName'], parameters.defaultBranchName) }}:
+- ${{ if and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'Manual')) }}:
   - group: 'UAT'
+
+- ${{ if and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), eq(variables['Build.Reason'], 'Manual')) }}:
+  - group: 'PRD'
