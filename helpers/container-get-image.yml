@@ -1,8 +1,21 @@
+parameters:
+- name: buildContainerImage
+  type: string
+  default: ''
+
 steps:
-- script: |
-    variant=$(jq -er '.build.args.VARIANT | select (.!=null)' devcontainer.json || sed '/^ARG VARIANT=/!d;s|.*=||;s|^"||;s|"$||' Dockerfile)
-    image=$(jq -er '.image | select (.!=null)' devcontainer.json || sed '/FROM/!d;s|FROM ||;s|${VARIANT}|'"${variant}|" Dockerfile)
-    echo "##vso[task.setvariable variable=url;isOutput=true]${image}"
-  displayName: Get Image
-  name: GetImage
-  workingDirectory: $(Build.SourcesDirectory)/.devcontainer
+- ${{ if ne(parameters.buildContainerImage, '') }}:
+  - script: |
+        image=${{ parameters.buildContainerImage }}
+        echo "##vso[task.setvariable variable=url;isOutput=true]${image}"
+      displayName: Get Image
+      name: GetImage
+
+- ${{ if eq(parameters.buildContainerImage, '') }}:
+  - script: |
+      variant=$(jq -er '.build.args.VARIANT | select (.!=null)' devcontainer.json || sed '/^ARG VARIANT=/!d;s|.*=||;s|^"||;s|"$||' Dockerfile)
+      image=$(jq -er '.image | select (.!=null)' devcontainer.json || sed '/FROM/!d;s|FROM ||;s|${VARIANT}|'"${variant}|" Dockerfile)
+      echo "##vso[task.setvariable variable=url;isOutput=true]${image}"
+    displayName: Get Image
+    name: GetImage
+    workingDirectory: $(Build.SourcesDirectory)/.devcontainer
