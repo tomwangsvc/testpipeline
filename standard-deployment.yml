@@ -39,8 +39,10 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
+      variables:
+        BUILD_IMAGE: $[ dependencies.GetContainer.outputs['GetBuildImage.url'] ]
       steps:
-      - script: echo "$[ dependencies.GetContainer.outputs['GetBuildImage.url'] ]"
+      - script: echo $BUILD_IMAGE
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
