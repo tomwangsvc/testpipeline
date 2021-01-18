@@ -34,8 +34,9 @@ stages:
     - job: TerraformPlan
       displayName: Terraform Plan
       steps:
-      - template: helpers/container-get-image.yml
-      - script: echo $(GetImage.url)
+      - ${{ if eq(parameters.buildContainerImage, '') }}:
+        - template: helpers/container-get-image.yml
+        - script: echo $(GetImage.url)
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
