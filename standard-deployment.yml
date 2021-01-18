@@ -30,16 +30,29 @@ variables:
 stages:
 - stage: Validate
   jobs:
+  - job GetContainerImage
+    displayName: Get Container Image
+    steps:
+    - template: helpers/container-get-image.yml
+      parameters:
+        buildContainerImage: ${{ parameters.buildContainerImage }}
+    - script: echo $(GetImage.url)
+    - script: node -v
+
+  - job: UnitTest
+    displayName: Unit Test
+    dependsOn: GetContainerImage
+    variables:
+      CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
+    container: 
+      image: $(CONTAINER_IMAGE)
+    steps:
+    - script: node -v
+
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
       steps:
-      - template: helpers/container-get-image.yml
-        parameters:
-          buildContainerImage: ${{ parameters.buildContainerImage }}
-      - script: echo $(GetImage.url)
-      - script: printenv
-
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
