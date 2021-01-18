@@ -30,7 +30,7 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - job GetContainerImage
+  - job: GetContainerImage
     displayName: Get Container Image
     steps:
     - template: helpers/container-get-image.yml
