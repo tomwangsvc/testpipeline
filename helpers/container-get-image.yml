@@ -6,10 +6,10 @@ parameters:
 steps:
 - ${{ if ne(parameters.buildContainerImage, '') }}:
   - script: echo "##vso[task.setvariable variable=url;isOutput=true]${image}"
-      displayName: Get Image
-      name: GetImage
-      env: 
-        image: "TEST-IMAGE"
+    displayName: Get Image
+    name: GetImage
+    env: 
+      image: ${{ parameters.buildContainerImage }}
 
 - ${{ if eq(parameters.buildContainerImage, '') }}:
   - script: |
