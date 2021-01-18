@@ -30,14 +30,17 @@ stages:
   - job: GetContainer
     steps:
     - script: |
-        cd $(Build.SourcesDirectory)/.devcontainer
-        VARIANT=$(jq -er '.build.args.VARIANT | select (.!=null)' devcontainer.json || sed '/^ARG VARIANT=/!d;s|.*=||;s|^"||;s|"$||' Dockerfile)
-        IMAGE=$(sed '/FROM/!d;s|FROM ||;s|${VARIANT}|'"${VARIANT}|" Dockerfile)
-        echo $IMAGE 
+        variant=$(jq -er '.build.args.VARIANT | select (.!=null)' devcontainer.json || sed '/^ARG VARIANT=/!d;s|.*=||;s|^"||;s|"$||' Dockerfile)
+        image=$(sed '/FROM/!d;s|FROM ||;s|${VARIANT}|'"${variant}|" Dockerfile)
+        echo "##vso[task.setvariable variable=url;isOutput=true]${image}"
+      displayName: Get Build Image
+      name: GetBuildImage
+      workingDirectory: $(Build.SourcesDirectory)/.devcontainer
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
       steps:
+      - script: echo $[ dependencies.GetImage.outputs['GetBuildImage.url'] ]
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
