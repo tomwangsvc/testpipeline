@@ -17,8 +17,8 @@ variables:
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
 
-- ${{ if ne(parameters.buildContainerImage, '') }}:
-  BUILD_CONTAINER_IMAGE: ${{ parameters.buildContainerImage }}
+- name: BUILD_CONTAINER_IMAGE
+  value: ${{ parameters.buildContainerImage }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - template: helpers/terraform-environment.yml
