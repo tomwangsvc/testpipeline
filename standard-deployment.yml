@@ -39,6 +39,7 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
+      dependsOn: GetContainer
       variables:
         BUILD_IMAGE: $[ dependencies.GetContainer.outputs['GetBuildImage.url'] ]
       steps:
