@@ -17,6 +17,9 @@ variables:
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
 
+- ${{ if ne(parameters.buildContainerImage, '') }}:
+  BUILD_CONTAINER_IMAGE: ${{ parameters.buildContainerImage }}
+
 - ${{ if eq(parameters.useTerraform, true) }}:
   - template: helpers/terraform-environment.yml
     parameters:
@@ -37,6 +40,10 @@ stages:
       - ${{ if eq(parameters.buildContainerImage, '') }}:
         - template: helpers/container-get-image.yml
         - script: echo $(GetImage.url)
+
+      - script: echo $(BUILD_CONTAINER_IMAGE)
+        condition: ne(variables.BUILD_CONTAINER_IMAGE, '')
+
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
