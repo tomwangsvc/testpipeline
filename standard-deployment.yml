@@ -27,6 +27,13 @@ variables:
 stages:
 - stage: Validate
   jobs:
+  - job GetContainer
+    steps:
+    - script: |
+        cd $(Build.SourcesDirectory)/.devcontainer
+        VARIANT=$(jq -er '.build.args.VARIANT | select (.!=null)' devcontainer.json || sed '/^ARG VARIANT=/!d;s|.*=||;s|^"||;s|"$||' Dockerfile)
+        IMAGE=$(sed '/FROM/!d;s|FROM ||;s|${VARIANT}|'"${VARIANT}|" Dockerfile)
+        echo $IMAGE 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
