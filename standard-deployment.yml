@@ -35,6 +35,8 @@ stages:
       displayName: Terraform Plan
       steps:
       - template: helpers/container-get-image.yml
+        parameters:
+          buildContainerImage: ${{ parameters.buildContainerImage }}
       - script: echo $(GetImage.url)
 
       - template: helpers/terraform-init.yml
