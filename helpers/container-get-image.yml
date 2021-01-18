@@ -9,7 +9,7 @@ steps:
       displayName: Get Image
       name: GetImage
       env: 
-        image: ${{ parameters.buildContainerImage }}
+        image: "TEST-IMAGE"
 
 - ${{ if eq(parameters.buildContainerImage, '') }}:
   - script: |
