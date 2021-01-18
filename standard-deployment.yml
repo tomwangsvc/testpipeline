@@ -42,7 +42,7 @@ stages:
       variables:
         BUILD_IMAGE: $[ dependencies.GetContainer.outputs['GetBuildImage.url'] ]
       steps:
-      - script: echo $BUILD_IMAGE
+      - script: echo $(BUILD_IMAGE)
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
