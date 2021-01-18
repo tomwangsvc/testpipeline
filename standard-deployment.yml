@@ -38,6 +38,7 @@ stages:
         parameters:
           buildContainerImage: ${{ parameters.buildContainerImage }}
       - script: echo $(GetImage.url)
+      - script: printenv
 
       - template: helpers/terraform-init.yml
 
