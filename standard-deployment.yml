@@ -10,7 +10,7 @@ parameters:
   default: ''
 - name: buildContainerImage
   type: string
-  default
+  default: ''
 
 variables:
 - template: helpers/select-environment.yml
