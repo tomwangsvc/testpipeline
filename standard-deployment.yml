@@ -27,7 +27,7 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - job GetContainer
+  - job: GetContainer
     steps:
     - script: |
         cd $(Build.SourcesDirectory)/.devcontainer
