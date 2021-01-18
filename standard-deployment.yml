@@ -40,7 +40,7 @@ stages:
     - job: TerraformPlan
       displayName: Terraform Plan
       steps:
-      - script: echo $[ dependencies.GetContainer.outputs['GetBuildImage.url'] ]
+      - script: echo "$[ dependencies.GetContainer.outputs['GetBuildImage.url'] ]"
       - template: helpers/terraform-init.yml
 
       - task: TerraformTaskV1@0
