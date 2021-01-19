@@ -36,8 +36,6 @@ stages:
     - template: helpers/container-get-image.yml
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
-    - script: echo $(GetImage.url)
-    - script: node -v
 
   - job: UnitTest
     displayName: Unit Test
@@ -47,7 +45,7 @@ stages:
     container: 
       image: $(CONTAINER_IMAGE)
     steps:
-    - script: node -v
+    - script: printenv
 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
