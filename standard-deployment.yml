@@ -168,7 +168,7 @@ stages:
 
   - deployment: Deploy App
     dependsOn: 
-    - Build
+    - BuildApp
     - Terraform
     environment: $(ENVIRONMENT_NAME)
     strategy:
