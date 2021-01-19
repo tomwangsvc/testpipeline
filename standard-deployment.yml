@@ -102,76 +102,9 @@ stages:
               displayName: Publish Terraform Output
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - job: BuildApp
-      displayName: Build App
-      dependsOn: Terraform
-      variables:
-        CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
-      container: 
-        image: $(CONTAINER_IMAGE)
-        env:
-          CI: true
-      steps:
-      - checkout: self
+    - template: ${{ parameters.deployType }}/build.yml
+      parameters:
+        buildContainerImage: ${{ parameters.buildContainerImage }}
 
-      - download: current
-        artifact: tfoutput-$(ENVIRONMENT_NAME)
-        displayName: Get Terraform Outputs
-
-      - task: Cache@2
-        displayName: Check Dependency Cache
-        inputs:
-          key: 'yarn | "$(Agent.OS)" | yarn.lock'
-          path: 'node_modules'
-          cacheHitVar: 'CACHE_RESTORED'
-          restoreKeys: |
-            yarn | $(Agent.OS)
-            yarn
-
-      - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
-        displayName: Build App
-
-      - publish: $(System.DefaultWorkingDirectory)/build/
-        artifact: react-app-$(ENVIRONMENT_NAME)
-        displayName: Publish App Artifact
-
-    - deployment: DeployApp
-      displayName: Deploy App
-      dependsOn: 
-      - BuildApp
-      - Terraform
-      environment: $(ENVIRONMENT_NAME)
-      strategy:
-        runOnce:
-          deploy:  
-            steps:
-            - checkout: none
-
-            - download: current
-              artifact: react-app-$(ENVIRONMENT_NAME)
-              displayName: Get App Build
-
-            - download: current
-              artifact: tfoutput-$(ENVIRONMENT_NAME)
-              displayName: Get Terraform Outputs
-
-            - script: |
-                websiteBucket=$(jq -er '.website_bucket.value | select (.!=null)' \
-                $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json)
-                echo "##vso[task.setvariable variable=value;isOutput=true]${websiteBucket}"
-              name: GetWebsiteBucket
-              displayName: Get Website Bucket
-
-            - task: AWSShellScript@1
-              displayName: Sync S3 Bucket
-              env:
-                websiteBucket: $(GetWebsiteBucket.value)
-              inputs:
-                awsCredentials: $(AWS_SERVICE_CONNECTOR)
-                regionName: $(AWS_REGION)
-                scriptType: inline
-                inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
-                disableAutoCwd: true
-                workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
-                failOnStandardError: true
-                  
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - template: ${{ parameters.deployType }}/deploy.yml                  
