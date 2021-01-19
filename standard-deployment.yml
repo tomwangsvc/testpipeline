@@ -125,7 +125,8 @@ stages:
               artifact: tfoutput-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
 
-  - job: Build App
+  - job: BuildApp
+    displayName: Build App
     dependsOn: Terraform
     variables:
       CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
