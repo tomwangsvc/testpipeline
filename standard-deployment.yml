@@ -37,15 +37,36 @@ stages:
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
 
-  - job: UnitTest
-    displayName: Unit Test
+  - job: ValidateApp
+    displayName: Validate App
+    condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
     dependsOn: GetContainerImage
     variables:
       CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
     container: 
       image: $(CONTAINER_IMAGE)
+    env:
+      CI: true
     steps:
-    - script: printenv
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | yarn.lock'
+        path: 'node_modules'
+        cacheHitVar: 'CACHE_RESTORED'
+        restoreKeys: |
+          yarn | $(Agent.OS)
+          yarn
+
+    - script: yarn --frozen-lockfile
+      displayName: Install Dependencies
+      condition: ne(variables.CACHE_RESTORED, 'true')
+
+    - script: yarn test
+      displayName: Unit Test
+
+    - publish: $(System.DefaultWorkingDirectory)
+      artifact: yarn-init
+      displayName: Save App State
 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
