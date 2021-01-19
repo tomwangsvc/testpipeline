@@ -89,7 +89,8 @@ stages:
         artifact: tfplan-$(ENVIRONMENT_NAME)
         displayName: Publish Terraform Plan
 
-- stage: Deploy
+- stage: BuildDeploy
+  displayName: Build and Deploy
   jobs:
   - deployment: Terraform
     environment: $(ENVIRONMENT_NAME)
@@ -124,20 +125,60 @@ stages:
               artifact: tfoutput-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
 
-  - deployment: App
+  - job: Build
     dependsOn: Terraform
-    environment: $(ENVIRONMENT_NAME)
     variables:
       CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
     container: 
       image: $(CONTAINER_IMAGE)
       env:
         CI: true
+    steps:
+    - checkout: self
+
+    - download: current
+      artifact: tfoutput-$(ENVIRONMENT_NAME)
+      displayName: Get Terraform Outputs
+
+    - script: printenv
+    
+    - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
+
+    - task: Cache@2
+      displayName: Check Dependency Cache
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | yarn.lock'
+        path: 'node_modules'
+        cacheHitVar: 'CACHE_RESTORED'
+        restoreKeys: |
+          yarn | $(Agent.OS)
+          yarn
+
+    - script: yarn --frozen-lockfile
+      displayName: Install Dependencies
+      condition: ne(variables.CACHE_RESTORED, 'true')
+
+    - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
+      displayName: Build App
+
+    - publish: $(System.DefaultWorkingDirectory)/build/
+      artifact: react-app-$(ENVIRONMENT_NAME)
+      displayName: Publish App Artifact
+
+  - deployment: App
+    dependsOn: 
+    - Build
+    - Terraform
+    environment: $(ENVIRONMENT_NAME)
     strategy:
       runOnce:
         deploy:  
           steps:
-          - checkout: self
+          - checkout: none
+
+          - download: current
+            artifact: react-app-$(ENVIRONMENT_NAME)
+            displayName: Get App Build
 
           - download: current
             artifact: tfoutput-$(ENVIRONMENT_NAME)
@@ -147,24 +188,11 @@ stages:
           
           - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
 
-          - task: Cache@2
-            displayName: Check Dependency Cache
+          - task: S3Upload@1
             inputs:
-              key: 'yarn | "$(Agent.OS)" | yarn.lock'
-              path: 'node_modules'
-              cacheHitVar: 'CACHE_RESTORED'
-              restoreKeys: |
-                yarn | $(Agent.OS)
-                yarn
-
-          - script: yarn --frozen-lockfile
-            displayName: Install Dependencies
-            condition: ne(variables.CACHE_RESTORED, 'true')
-
-          - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
-            displayName: Build App
-
-          - publish: $(System.DefaultWorkingDirectory)/build/
-            artifact: react-app
-            displayName: Publish App Artifact
+              awsCredentials: 'CICD (Dev) Infra Deploy'
+              regionName: 'ap-southeast-2'
+              bucketName: 'devops-sample-app-dev'
+              globExpressions: 'build'
+              filesAcl: 'public-read'
                   
