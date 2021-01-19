@@ -64,10 +64,6 @@ stages:
     - script: yarn test
       displayName: Unit Test
 
-    - publish: $(System.DefaultWorkingDirectory)
-      artifact: yarn-init
-      displayName: Save App State
-
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
@@ -94,12 +90,12 @@ stages:
 
 - stage: Deploy
   jobs:
-  - deployment: Deploy
+  - deployment: Terraform
     environment: $(ENVIRONMENT_NAME)
     strategy:
       runOnce:
         ${{ if eq(parameters.useTerraform, true) }}:
-          preDeploy:  
+          deploy:  
             steps:
             - checkout: self
 
@@ -127,6 +123,16 @@ stages:
               artifact: tfoutput-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
 
+  - deployment: App
+    environment: $(ENVIRONMENT_NAME)
+    variables:
+      CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
+    container: 
+      image: $(CONTAINER_IMAGE)
+      env:
+        CI: true
+    strategy:
+      runOnce:
         deploy:  
           steps:
           - checkout: self
@@ -138,3 +144,20 @@ stages:
           - script: printenv
           
           - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
+
+          - task: Cache@2
+            inputs:
+              key: 'yarn | "$(Agent.OS)" | yarn.lock'
+              path: 'node_modules'
+              cacheHitVar: 'CACHE_RESTORED'
+              restoreKeys: |
+                yarn | $(Agent.OS)
+                yarn
+
+          - script: yarn --frozen-lockfile
+            displayName: Install Dependencies
+            condition: ne(variables.CACHE_RESTORED, 'true')
+
+          - script: yarn test
+            displayName: Unit Test
+                  
