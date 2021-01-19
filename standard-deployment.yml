@@ -195,6 +195,6 @@ stages:
               awsCredentials: 'CICD (Dev) Infra Deploy'
               regionName: 'ap-southeast-2'
               bucketName: 'devops-sample-app-dev'
-              globExpressions: react-app-$(ENVIRONMENT_NAME)/*
+              globExpressions: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
               filesAcl: 'public-read'
                   
