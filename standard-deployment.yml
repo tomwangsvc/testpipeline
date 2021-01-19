@@ -45,8 +45,8 @@ stages:
       CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
     container: 
       image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
+      env:
+        CI: true
     steps:
     - task: Cache@2
       inputs:
