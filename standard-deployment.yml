@@ -141,10 +141,6 @@ stages:
       artifact: tfoutput-$(ENVIRONMENT_NAME)
       displayName: Get Terraform Outputs
 
-    - script: printenv
-    
-    - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
-
     - task: Cache@2
       displayName: Check Dependency Cache
       inputs:
@@ -185,10 +181,6 @@ stages:
           - download: current
             artifact: tfoutput-$(ENVIRONMENT_NAME)
             displayName: Get Terraform Outputs
-
-          - script: printenv
-          
-          - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
 
           - script: |
               websiteBucket=$(jq -er '.website_bucket.value | select (.!=null)' \
