@@ -37,7 +37,7 @@ stages:
 - stage: Validate
   jobs:
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - template: ReactApp/validate.yml
+    - template: ${{ parameters.deployType }}/validate.yml
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
 
