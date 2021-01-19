@@ -96,13 +96,13 @@ stages:
       environment: $(ENVIRONMENT_NAME)
       variables:
       - template: helpers/terraform-environment.yml
-          parameters:
-            AWS_ACCOUNT: $(AWS_ACCOUNT)  
-            AWS_REGION: $(AWS_REGION)
-            ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
-            repoName: $(Build.Repository.Name)
-            sourcesDirectory: $(Build.SourcesDirectory)
-            terraformVersion: ${{ parameters.terraformVersion }}
+        parameters:
+          AWS_ACCOUNT: $(AWS_ACCOUNT)  
+          AWS_REGION: $(AWS_REGION)
+          ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
+          repoName: $(Build.Repository.Name)
+          sourcesDirectory: $(Build.SourcesDirectory)
+          terraformVersion: ${{ parameters.terraformVersion }}
       strategy:
         runOnce:
           ${{ if eq(parameters.useTerraform, true) }}:
