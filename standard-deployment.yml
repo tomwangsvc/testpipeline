@@ -166,7 +166,8 @@ stages:
       artifact: react-app-$(ENVIRONMENT_NAME)
       displayName: Publish App Artifact
 
-  - deployment: Deploy App
+  - deployment: DeployApp
+    displayName: Deploy App
     dependsOn: 
     - BuildApp
     - Terraform
