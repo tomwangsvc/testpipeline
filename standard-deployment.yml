@@ -13,9 +13,9 @@ parameters:
   default: ''
 - name: deployType
   type: string
-  default: ''
+  default: 'null'
   values:
-  - ''
+  - 'null'
   - 'ReactApp'
 
 variables:
