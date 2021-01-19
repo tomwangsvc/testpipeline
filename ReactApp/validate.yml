@@ -7,7 +7,7 @@ jobs:
 - job: GetContainerImage
   displayName: Get Container Image
   steps:
-  - template: helpers/container-get-image.yml
+  - template: ../helpers/container-get-image.yml
     parameters:
       buildContainerImage: ${{ parameters.buildContainerImage }}
 
