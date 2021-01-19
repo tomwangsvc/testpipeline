@@ -17,6 +17,16 @@ variables:
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
 
+- ${{ if eq(parameters.useTerraform, true) }}:
+  - template: helpers/terraform-environment.yml
+    parameters:
+      AWS_ACCOUNT: $(AWS_ACCOUNT)  
+      AWS_REGION: $(AWS_REGION)
+      ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
+      repoName: $(Build.Repository.Name)
+      sourcesDirectory: $(Build.SourcesDirectory)
+      terraformVersion: ${{ parameters.terraformVersion }}
+
 stages:
 - stage: Validate
   jobs:
@@ -58,15 +68,6 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
       displayName: Terraform Plan
-      variables:
-      - template: helpers/terraform-environment.yml
-        parameters:
-          AWS_ACCOUNT: $(AWS_ACCOUNT)  
-          AWS_REGION: $(AWS_REGION)
-          ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
-          repoName: $(Build.Repository.Name)
-          sourcesDirectory: $(Build.SourcesDirectory)
-          terraformVersion: ${{ parameters.terraformVersion }}
       steps:
       - template: helpers/terraform-init.yml
 
@@ -91,53 +92,41 @@ stages:
 - stage: BuildDeploy
   displayName: Build and Deploy
   jobs:
-  - ${{ if eq(parameters.useTerraform, true) }}:
-    - deployment: Terraform
-      environment: $(ENVIRONMENT_NAME)
-      variables:
-      - template: helpers/terraform-environment.yml
-        parameters:
-          AWS_ACCOUNT: $(AWS_ACCOUNT)  
-          AWS_REGION: $(AWS_REGION)
-          ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
-          repoName: $(Build.Repository.Name)
-          sourcesDirectory: $(Build.SourcesDirectory)
-          terraformVersion: ${{ parameters.terraformVersion }}
-      strategy:
-        runOnce:
-          ${{ if eq(parameters.useTerraform, true) }}:
-            deploy:  
-              steps:
-              - checkout: self
+  - deployment: Terraform
+    environment: $(ENVIRONMENT_NAME)
+    strategy:
+      runOnce:
+        ${{ if eq(parameters.useTerraform, true) }}:
+          deploy:  
+            steps:
+            - checkout: self
 
-              - download: current
-                artifact: tfplan-$(ENVIRONMENT_NAME)
-                displayName: Get tfplan
+            - download: current
+              artifact: tfplan-$(ENVIRONMENT_NAME)
+              displayName: Get tfplan
 
-              - template: helpers/terraform-init.yml
+            - template: helpers/terraform-init.yml
 
-              - task: TerraformTaskV1@0
-                displayName: Apply Terraform
-                name: TerraformApply
-                inputs:
-                  provider: $(TF_PROVIDER)
-                  command: apply
-                  workingDirectory: $(TF_PATH)
-                  commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
-                  environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
+            - task: TerraformTaskV1@0
+              displayName: Apply Terraform
+              name: TerraformApply
+              inputs:
+                provider: $(TF_PROVIDER)
+                command: apply
+                workingDirectory: $(TF_PATH)
+                commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
+                environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-              - script: mv $(TerraformApply.jsonOutputVariablesPath) $(Build.StagingDirectory)/tfoutput.json
-                name: GetTFOutputFileName
-                displayName: Get Terraform Output
+            - script: mv $(TerraformApply.jsonOutputVariablesPath) $(Build.StagingDirectory)/tfoutput.json
+              name: GetTFOutputFileName
+              displayName: Get Terraform Output
 
-              - publish: $(Build.StagingDirectory)
-                artifact: tfoutput-$(ENVIRONMENT_NAME)
-                displayName: Publish Terraform Output
+            - publish: $(Build.StagingDirectory)
+              artifact: tfoutput-$(ENVIRONMENT_NAME)
+              displayName: Publish Terraform Output
 
   - job: Build
-    dependsOn: 
-    - ${{ if eq(parameters.useTerraform, true) }}:
-      - Terraform
+    dependsOn: Terraform
     variables:
       CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
     container: 
@@ -179,8 +168,7 @@ stages:
   - deployment: App
     dependsOn: 
     - Build
-    - ${{ if eq(parameters.useTerraform, true) }}:
-      - Terraform
+    - Terraform
     environment: $(ENVIRONMENT_NAME)
     strategy:
       runOnce:
