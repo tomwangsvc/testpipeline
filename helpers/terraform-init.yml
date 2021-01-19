@@ -1,9 +1,9 @@
 steps:
-- task: TerraformInstaller@0
-  displayName: Install Terraform
-  condition: ne('$(TF_VERSION)', '')
-  inputs:
-    terraformVersion: $(TF_VERSION)
+- ${{ if ne(parameters.terraformVersion, '') }}:
+  - task: TerraformInstaller@0
+    displayName: Install Terraform
+    inputs:
+      terraformVersion: $(TF_VERSION)
 
 - task: TerraformTaskV1@0
   displayName: Initialise Terraform
