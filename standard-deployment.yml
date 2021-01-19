@@ -15,6 +15,7 @@ parameters:
   type: string
   default: ''
   values:
+  - ''
   - 'ReactApp'
 
 variables:
