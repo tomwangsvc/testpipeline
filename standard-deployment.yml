@@ -11,6 +11,11 @@ parameters:
 - name: buildContainerImage
   type: string
   default: ''
+- name: deployType
+  type: string
+  default: ''
+  values:
+  - 'ReactApp'
 
 variables:
 - template: helpers/select-environment.yml
@@ -30,40 +35,41 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - job: GetContainerImage
-    displayName: Get Container Image
-    steps:
-    - template: helpers/container-get-image.yml
-      parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - job: GetContainerImage
+      displayName: Get Container Image
+      steps:
+      - template: helpers/container-get-image.yml
+        parameters:
+          buildContainerImage: ${{ parameters.buildContainerImage }}
 
-  - job: ValidateApp
-    displayName: Validate App
-    condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-    dependsOn: GetContainerImage
-    variables:
-      CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
-    container: 
-      image: $(CONTAINER_IMAGE)
-      env:
-        CI: true
-    steps:
-    - task: Cache@2
-      displayName: Check Dependency Cache
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | yarn.lock'
-        path: 'node_modules'
-        cacheHitVar: 'CACHE_RESTORED'
-        restoreKeys: |
-          yarn | $(Agent.OS)
-          yarn
+    - job: ValidateApp
+      displayName: Validate App
+      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+      dependsOn: GetContainerImage
+      variables:
+        CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
+      container: 
+        image: $(CONTAINER_IMAGE)
+        env:
+          CI: true
+      steps:
+      - task: Cache@2
+        displayName: Check Dependency Cache
+        inputs:
+          key: 'yarn | "$(Agent.OS)" | yarn.lock'
+          path: 'node_modules'
+          cacheHitVar: 'CACHE_RESTORED'
+          restoreKeys: |
+            yarn | $(Agent.OS)
+            yarn
 
-    - script: yarn --frozen-lockfile
-      displayName: Install Dependencies
-      condition: ne(variables.CACHE_RESTORED, 'true')
+      - script: yarn --frozen-lockfile
+        displayName: Install Dependencies
+        condition: ne(variables.CACHE_RESTORED, 'true')
 
-    - script: yarn test
-      displayName: Unit Test
+      - script: yarn test
+        displayName: Unit Test
 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - job: TerraformPlan
@@ -92,11 +98,11 @@ stages:
 - stage: BuildDeploy
   displayName: Build and Deploy
   jobs:
-  - deployment: Terraform
-    environment: $(ENVIRONMENT_NAME)
-    strategy:
-      runOnce:
-        ${{ if eq(parameters.useTerraform, true) }}:
+  - ${{ if eq(parameters.useTerraform, true) }}:
+    - deployment: Terraform
+      environment: $(ENVIRONMENT_NAME)
+      strategy:
+        runOnce:
           deploy:  
             steps:
             - checkout: self
@@ -125,76 +131,77 @@ stages:
               artifact: tfoutput-$(ENVIRONMENT_NAME)
               displayName: Publish Terraform Output
 
-  - job: BuildApp
-    displayName: Build App
-    dependsOn: Terraform
-    variables:
-      CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
-    container: 
-      image: $(CONTAINER_IMAGE)
-      env:
-        CI: true
-    steps:
-    - checkout: self
-
-    - download: current
-      artifact: tfoutput-$(ENVIRONMENT_NAME)
-      displayName: Get Terraform Outputs
-
-    - task: Cache@2
-      displayName: Check Dependency Cache
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | yarn.lock'
-        path: 'node_modules'
-        cacheHitVar: 'CACHE_RESTORED'
-        restoreKeys: |
-          yarn | $(Agent.OS)
-          yarn
-
-    - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - job: BuildApp
       displayName: Build App
+      dependsOn: Terraform
+      variables:
+        CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
+      container: 
+        image: $(CONTAINER_IMAGE)
+        env:
+          CI: true
+      steps:
+      - checkout: self
 
-    - publish: $(System.DefaultWorkingDirectory)/build/
-      artifact: react-app-$(ENVIRONMENT_NAME)
-      displayName: Publish App Artifact
+      - download: current
+        artifact: tfoutput-$(ENVIRONMENT_NAME)
+        displayName: Get Terraform Outputs
 
-  - deployment: DeployApp
-    displayName: Deploy App
-    dependsOn: 
-    - BuildApp
-    - Terraform
-    environment: $(ENVIRONMENT_NAME)
-    strategy:
-      runOnce:
-        deploy:  
-          steps:
-          - checkout: none
+      - task: Cache@2
+        displayName: Check Dependency Cache
+        inputs:
+          key: 'yarn | "$(Agent.OS)" | yarn.lock'
+          path: 'node_modules'
+          cacheHitVar: 'CACHE_RESTORED'
+          restoreKeys: |
+            yarn | $(Agent.OS)
+            yarn
 
-          - download: current
-            artifact: react-app-$(ENVIRONMENT_NAME)
-            displayName: Get App Build
+      - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
+        displayName: Build App
 
-          - download: current
-            artifact: tfoutput-$(ENVIRONMENT_NAME)
-            displayName: Get Terraform Outputs
+      - publish: $(System.DefaultWorkingDirectory)/build/
+        artifact: react-app-$(ENVIRONMENT_NAME)
+        displayName: Publish App Artifact
 
-          - script: |
-              websiteBucket=$(jq -er '.website_bucket.value | select (.!=null)' \
-              $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json)
-              echo "##vso[task.setvariable variable=value;isOutput=true]${websiteBucket}"
-            name: GetWebsiteBucket
-            displayName: Get Website Bucket
+    - deployment: DeployApp
+      displayName: Deploy App
+      dependsOn: 
+      - BuildApp
+      - Terraform
+      environment: $(ENVIRONMENT_NAME)
+      strategy:
+        runOnce:
+          deploy:  
+            steps:
+            - checkout: none
 
-          - task: AWSShellScript@1
-            displayName: Sync S3 Bucket
-            env:
-              websiteBucket: $(GetWebsiteBucket.value)
-            inputs:
-              awsCredentials: $(AWS_SERVICE_CONNECTOR)
-              regionName: $(AWS_REGION)
-              scriptType: inline
-              inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
-              disableAutoCwd: true
-              workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
-              failOnStandardError: true
+            - download: current
+              artifact: react-app-$(ENVIRONMENT_NAME)
+              displayName: Get App Build
+
+            - download: current
+              artifact: tfoutput-$(ENVIRONMENT_NAME)
+              displayName: Get Terraform Outputs
+
+            - script: |
+                websiteBucket=$(jq -er '.website_bucket.value | select (.!=null)' \
+                $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json)
+                echo "##vso[task.setvariable variable=value;isOutput=true]${websiteBucket}"
+              name: GetWebsiteBucket
+              displayName: Get Website Bucket
+
+            - task: AWSShellScript@1
+              displayName: Sync S3 Bucket
+              env:
+                websiteBucket: $(GetWebsiteBucket.value)
+              inputs:
+                awsCredentials: $(AWS_SERVICE_CONNECTOR)
+                regionName: $(AWS_REGION)
+                scriptType: inline
+                inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
+                disableAutoCwd: true
+                workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
+                failOnStandardError: true
                   
