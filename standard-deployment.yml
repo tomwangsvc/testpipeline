@@ -49,6 +49,7 @@ stages:
         CI: true
     steps:
     - task: Cache@2
+      displayName: Check Dependency Cache
       inputs:
         key: 'yarn | "$(Agent.OS)" | yarn.lock'
         path: 'node_modules'
@@ -147,6 +148,7 @@ stages:
           - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
 
           - task: Cache@2
+            displayName: Check Dependency Cache
             inputs:
               key: 'yarn | "$(Agent.OS)" | yarn.lock'
               path: 'node_modules'
