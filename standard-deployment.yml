@@ -124,6 +124,7 @@ stages:
               displayName: Publish Terraform Output
 
   - deployment: App
+    dependsOn: Terraform
     environment: $(ENVIRONMENT_NAME)
     variables:
       CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
