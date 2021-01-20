@@ -1,0 +1,23 @@
+jobs:
+- job: TerraformPlan
+  displayName: Terraform Plan
+  steps:
+  - template: init.yml
+
+  - task: TerraformTaskV1@0
+    displayName: Plan Terraform
+    name: TerraformPlan
+    inputs:
+      provider: $(TF_PROVIDER)
+      command: plan
+      workingDirectory: $(TF_PATH)
+      commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
+      environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
+
+  - script: mv $(TerraformPlan.jsonPlanFilePath) $(Build.StagingDirectory)/tfplan.json
+    name: GetTFPlanJson
+    displayName: Get tfplan.json
+
+  - publish: $(Build.StagingDirectory)
+    artifact: tfplan-$(ENVIRONMENT_NAME)
+    displayName: Publish Terraform Plan

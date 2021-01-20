@@ -11,6 +11,12 @@ parameters:
 - name: buildContainerImage
   type: string
   default: ''
+- name: deployType
+  type: string
+  default: 'null'
+  values:
+  - 'null'
+  - 'ReactApp'
 
 variables:
 - template: helpers/select-environment.yml
@@ -18,7 +24,7 @@ variables:
     defaultBranchName: ${{ parameters.defaultBranchName }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
-  - template: helpers/terraform-environment.yml
+  - template: Terraform/environment.yml
     parameters:
       AWS_ACCOUNT: $(AWS_ACCOUNT)  
       AWS_REGION: $(AWS_REGION)
@@ -30,90 +36,24 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - job: GetContainerImage
-    displayName: Get Container Image
-    steps:
-    - template: helpers/container-get-image.yml
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - template: ${{ parameters.deployType }}/validate.yml
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
 
-  - job: UnitTest
-    displayName: Unit Test
-    dependsOn: GetContainerImage
-    variables:
-      CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
-    container: 
-      image: $(CONTAINER_IMAGE)
-    steps:
-    - script: printenv
-
   - ${{ if eq(parameters.useTerraform, true) }}:
-    - job: TerraformPlan
-      displayName: Terraform Plan
-      steps:
-      - template: helpers/terraform-init.yml
+    - template: Terraform/validate.yml
 
-      - task: TerraformTaskV1@0
-        displayName: Plan Terraform
-        name: TerraformPlan
-        inputs:
-          provider: $(TF_PROVIDER)
-          command: plan
-          workingDirectory: $(TF_PATH)
-          commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
-          environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
-
-      - script: mv $(TerraformPlan.jsonPlanFilePath) $(Build.StagingDirectory)/tfplan.json
-        name: GetTFPlanJson
-        displayName: Get tfplan.json
-
-      - publish: $(Build.StagingDirectory)
-        artifact: tfplan-$(ENVIRONMENT_NAME)
-        displayName: Publish Terraform Plan
-
-- stage: Deploy
+- stage: BuildDeploy
+  displayName: Build and Deploy
   jobs:
-  - deployment: Deploy
-    environment: $(ENVIRONMENT_NAME)
-    strategy:
-      runOnce:
-        ${{ if eq(parameters.useTerraform, true) }}:
-          preDeploy:  
-            steps:
-            - checkout: self
+  - ${{ if eq(parameters.useTerraform, true) }}:
+    - template: Terraform/deploy.yml
 
-            - download: current
-              artifact: tfplan-$(ENVIRONMENT_NAME)
-              displayName: Get tfplan
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - template: ${{ parameters.deployType }}/build.yml
+      parameters:
+        buildContainerImage: ${{ parameters.buildContainerImage }}
 
-            - template: helpers/terraform-init.yml
-
-            - task: TerraformTaskV1@0
-              displayName: Apply Terraform
-              name: TerraformApply
-              inputs:
-                provider: $(TF_PROVIDER)
-                command: apply
-                workingDirectory: $(TF_PATH)
-                commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
-                environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
-
-            - script: mv $(TerraformApply.jsonOutputVariablesPath) $(Build.StagingDirectory)/tfoutput.json
-              name: GetTFOutputFileName
-              displayName: Get Terraform Output
-
-            - publish: $(Build.StagingDirectory)
-              artifact: tfoutput-$(ENVIRONMENT_NAME)
-              displayName: Publish Terraform Output
-
-        deploy:  
-          steps:
-          - checkout: self
-
-          - download: current
-            artifact: tfoutput-$(ENVIRONMENT_NAME)
-            displayName: Get Terraform Outputs
-
-          - script: printenv
-          
-          - script: cat $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - template: ${{ parameters.deployType }}/deploy.yml                  

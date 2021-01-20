@@ -1,0 +1,40 @@
+jobs:
+- deployment: DeployApp
+  displayName: Deploy App
+  dependsOn: 
+  - BuildApp
+  - Terraform
+  environment: $(ENVIRONMENT_NAME)
+  strategy:
+    runOnce:
+      deploy:  
+        steps:
+        - checkout: none
+
+        - download: current
+          artifact: react-app-$(ENVIRONMENT_NAME)
+          displayName: Get App Build
+
+        - download: current
+          artifact: tfoutput-$(ENVIRONMENT_NAME)
+          displayName: Get Terraform Outputs
+
+        - script: |
+            websiteBucket=$(jq -er '.website_bucket.value | select (.!=null)' \
+            $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json)
+            echo "##vso[task.setvariable variable=value;isOutput=true]${websiteBucket}"
+          name: GetWebsiteBucket
+          displayName: Get Website Bucket
+
+        - task: AWSShellScript@1
+          displayName: Sync S3 Bucket
+          env:
+            websiteBucket: $(GetWebsiteBucket.value)
+          inputs:
+            awsCredentials: $(AWS_SERVICE_CONNECTOR)
+            regionName: $(AWS_REGION)
+            scriptType: inline
+            inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
+            disableAutoCwd: true
+            workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
+            failOnStandardError: true
