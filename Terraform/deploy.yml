@@ -1,0 +1,32 @@
+jobs:
+- deployment: Terraform
+  environment: $(ENVIRONMENT_NAME)
+  strategy:
+    runOnce:
+      deploy:  
+        steps:
+        - checkout: self
+
+        - download: current
+          artifact: tfplan-$(ENVIRONMENT_NAME)
+          displayName: Get tfplan
+
+        - template: Terraform/init.yml
+
+        - task: TerraformTaskV1@0
+          displayName: Apply Terraform
+          name: TerraformApply
+          inputs:
+            provider: $(TF_PROVIDER)
+            command: apply
+            workingDirectory: $(TF_PATH)
+            commandOptions: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)/tfplan
+            environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
+
+        - script: mv $(TerraformApply.jsonOutputVariablesPath) $(Build.StagingDirectory)/tfoutput.json
+          name: GetTFOutputFileName
+          displayName: Get Terraform Output
+
+        - publish: $(Build.StagingDirectory)
+          artifact: tfoutput-$(ENVIRONMENT_NAME)
+          displayName: Publish Terraform Output
