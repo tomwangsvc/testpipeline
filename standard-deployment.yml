@@ -50,10 +50,10 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/deploy.yml
 
-  # - ${{ if in(parameters.deployType, 'ReactApp') }}:
-  #   - template: ${{ parameters.deployType }}/build.yml
-  #     parameters:
-  #       buildContainerImage: ${{ parameters.buildContainerImage }}
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - template: ${{ parameters.deployType }}/build.yml
+      parameters:
+        buildContainerImage: ${{ parameters.buildContainerImage }}
 
-  # - ${{ if in(parameters.deployType, 'ReactApp') }}:
-  #   - template: ${{ parameters.deployType }}/deploy.yml                  
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+    - template: ${{ parameters.deployType }}/deploy.yml                  
