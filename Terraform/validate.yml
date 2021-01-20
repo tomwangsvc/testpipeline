@@ -2,7 +2,7 @@ jobs:
 - job: TerraformPlan
   displayName: Terraform Plan
   steps:
-  - template: Terraform/init.yml
+  - template: init.yml
 
   - task: TerraformTaskV1@0
     displayName: Plan Terraform
