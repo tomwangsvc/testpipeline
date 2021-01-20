@@ -34,7 +34,8 @@ jobs:
             awsCredentials: $(AWS_SERVICE_CONNECTOR)
             regionName: $(AWS_REGION)
             scriptType: inline
-            inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
+            # inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
+            inlineScript: 'aws s3 rm s3://${websiteBucket} --recursive'
             disableAutoCwd: true
             workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
             failOnStandardError: true
