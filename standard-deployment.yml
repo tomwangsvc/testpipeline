@@ -17,6 +17,11 @@ parameters:
   values:
   - 'null'
   - 'ReactApp'
+  - 'LambdaService'
+- name: buildLambdas
+  type: object
+  default:
+  - ''
 
 variables:
 - template: helpers/select-environment.yml
@@ -36,10 +41,12 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
+  - ${{ if in(parameters.deployType, 'ReactApp', 'LambdaService') }}:
     - template: ${{ parameters.deployType }}/validate.yml
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
+        ${{ if eq(parameters.deployType, 'LambdaService') }}:
+          buildLambdas: ${{ parameters.buildLambdas }}
 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml

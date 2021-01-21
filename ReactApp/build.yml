@@ -23,9 +23,9 @@ jobs:
   - task: Cache@2
     displayName: Check Dependency Cache
     inputs:
-      key: 'yarn | "$(Agent.OS)" | yarn.lock'
-      path: 'node_modules'
-      cacheHitVar: 'CACHE_RESTORED'
+      key: yarn | "$(Agent.OS)" | yarn.lock
+      path: node_modules
+      cacheHitVar: CACHE_RESTORED
       restoreKeys: |
         yarn | $(Agent.OS)
         yarn
