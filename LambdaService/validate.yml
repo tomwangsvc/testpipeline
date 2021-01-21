@@ -27,7 +27,7 @@ jobs:
     - task: Cache@2
       displayName: Check ${{ lambdaName }} Dependency Cache
       inputs:
-        key: npm | "$(Agent.OS)" | package-lock.json
+        key: npm | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package-lock.json
         path: lambdas/${{ lambdaName }}/node_modules
         cacheHitVar: CACHE_RESTORED
         restoreKeys: |
