@@ -45,7 +45,3 @@ jobs:
     - script: npm test
       displayName: Unit Test ${{ lambdaName }}
       workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
-
-    - publish: ${{ parameters.lambdasPath }}/${{ lambdaName }}
-      displayName: Publish ${{ lambdaName }} Artifact
-      artifact: ${{ lambdaName }}

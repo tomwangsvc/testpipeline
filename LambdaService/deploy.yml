@@ -1,0 +1,15 @@
+parameters:
+- name: lambdas
+  type: object
+
+steps:
+- ${{ each lambdaName in parameters.lambdas }}:
+  - task: Cache@2
+    displayName: Cache ${{ lambdaName }} Prod Dependencies
+    inputs:
+      key: npm | prod | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+      path: ${{ parameters.lambdasPath }}/${{ lambdaName }}/node_modules
+      cacheHitVar: CACHE_RESTORED
+      restoreKeys: |
+        npm | $(Agent.OS)
+        npm

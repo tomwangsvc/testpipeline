@@ -59,6 +59,9 @@ stages:
   jobs:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/deploy.yml
+      parameters:
+        deployType: ${{ parameters.deployType }}
+        lambdas: ${{ parameters.lambdas }}
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - template: ${{ parameters.deployType }}/build.yml

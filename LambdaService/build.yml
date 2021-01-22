@@ -1,0 +1,36 @@
+parameters:
+- name: buildContainerImage
+  type: string
+  default: ''
+- name: lambdas
+  type: object
+- name: lambdasPath
+  type: string
+
+jobs:
+- job: BuildLambda
+  displayName: Build Lambda
+  variables:
+    CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
+  container: 
+    image: $(CONTAINER_IMAGE)
+    env:
+      CI: true
+  steps:
+  - checkout: self
+
+  - ${{ each lambdaName in parameters.lambdas }}:
+    - task: Cache@2
+      displayName: Cache ${{ lambdaName }} Prod Dependencies
+      inputs:
+        key: npm | prod | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+        path: ${{ parameters.lambdasPath }}/${{ lambdaName }}/node_modules
+        cacheHitVar: CACHE_RESTORED
+        restoreKeys: |
+          npm | $(Agent.OS)
+          npm
+
+    - script: npm install --only=prod
+      displayName: Install ${{ lambdaName }} Production Dependencies
+      condition: ne(variables.CACHE_RESTORED, 'true')
+      workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
