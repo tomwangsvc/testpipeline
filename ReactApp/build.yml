@@ -1,6 +1,4 @@
 steps:
-- checkout: self
-
 - download: current
   artifact: tfoutput-$(ENVIRONMENT_NAME)
   displayName: Get Terraform Outputs
