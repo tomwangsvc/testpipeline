@@ -21,7 +21,7 @@ steps:
     displayName: Zip ${{ lambdaName }} Lambda
     inputs:
       rootFolderOrFile: lambdas/${{ lambdaName }}
-      includeRootFolder: false
+      includeRootFolder: true
       archiveType: zip
       archiveFile: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
       replaceExistingArchive: true
