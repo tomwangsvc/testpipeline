@@ -2,25 +2,31 @@ parameters:
 - name: defaultBranchName
   type: string
   default: 'master'
+# execute Terraform from this repo's '/terraform' directory
 - name: useTerraform
   type: boolean
   default: true
 - name: terraformVersion
   type: string
   default: ''
-- name: useContainerImage
+# use a Docker container to run Validate and Build stages
+# expects a named image, otherwise uses your repo's devcontainer (default)
+- name: useContainerImage 
   type: string
   default: true
-- name: deployType
+# determine what set of templates will be used for the pipeline
+- name: deployType 
   type: string
   default: 'null'
   values:
   - 'null'
   - 'ReactApp'
   - 'LambdaService'
-- name: sources
+# describe your source code as required by the deployType template
+# e.g. list location(s) of source code that should be validated/built
+- name: hasSourceCode  
   type: object
-  default: ''
+  default: false
 
 variables:
 - template: helpers/select-environment.yml
@@ -55,7 +61,7 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
 
-  - ${{ if ne(parameters.sources, '') }}:  
+  - ${{ if ne(parameters.hasSourceCode, false) }}:  
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
@@ -63,9 +69,9 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
           parameters:
-            sources: ${{ parameters.sources }}
+            hasSourceCode: ${{ parameters.hasSourceCode }}
 
-- ${{ if ne(parameters.sources, '') }}:
+- ${{ if ne(parameters.hasSourceCode, false) }}:
   - stage: Build
     ${{ if in(parameters.deployType, 'LambdaService') }}:
       # Build once, deploy anywhere
@@ -84,7 +90,7 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
-            sources: ${{ parameters.sources }}
+            hasSourceCode: ${{ parameters.hasSourceCode }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - stage: Deploy
@@ -101,7 +107,7 @@ stages:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
             parameters:
-              sources: ${{ parameters.sources }}
+              hasSourceCode: ${{ parameters.hasSourceCode }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
