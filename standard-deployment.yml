@@ -94,6 +94,8 @@ stages:
       - Validate
       - ${{ if ne(parameters.useContainerImage, false) }}: 
         - Initialise
+      - ${{ if in(parameters.deployType, 'LambdaService') }}:
+        - Build
     jobs:
     - template: Terraform/deploy.yml
       ${{ if eq(parameters.deployType, 'LambdaService') }}:
