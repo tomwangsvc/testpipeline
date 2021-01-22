@@ -10,7 +10,7 @@ parameters:
   default: ''
 - name: useContainerImage
   type: string
-  default: false
+  default: true
 - name: deployType
   type: string
   default: 'null'
