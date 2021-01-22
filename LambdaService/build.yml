@@ -1,37 +1,22 @@
 parameters:
-- name: buildContainerImage
-  type: string
-  default: ''
 - name: lambdas
   type: object
 - name: lambdasPath
   type: string
 
-jobs:
-- job: BuildLambdas
-  displayName: Build Lambdas
-  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-  variables:
-    CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
-  container: 
-    image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
-  steps:
-  - checkout: self
+steps:
+- ${{ each lambdaName in parameters.lambdas }}:
+  - task: Cache@2
+    displayName: Cache ${{ lambdaName }} Prod Dependencies
+    inputs:
+      key: npm | prod | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+      path: ${{ parameters.lambdasPath }}/${{ lambdaName }}/node_modules
+      cacheHitVar: CACHE_RESTORED
+      restoreKeys: |
+        npm | $(Agent.OS)
+        npm
 
-  - ${{ each lambdaName in parameters.lambdas }}:
-    - task: Cache@2
-      displayName: Cache ${{ lambdaName }} Prod Dependencies
-      inputs:
-        key: npm | prod | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
-        path: ${{ parameters.lambdasPath }}/${{ lambdaName }}/node_modules
-        cacheHitVar: CACHE_RESTORED
-        restoreKeys: |
-          npm | $(Agent.OS)
-          npm
-
-    - script: npm install --only=prod
-      displayName: Install ${{ lambdaName }} Production Dependencies
-      condition: ne(variables.CACHE_RESTORED, 'true')
-      workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
+  - script: npm install --only=prod
+    displayName: Install ${{ lambdaName }} Production Dependencies
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}

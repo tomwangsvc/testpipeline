@@ -57,12 +57,21 @@ stages:
 - ${{ if in(parameters.deployType, 'LambdaService') }}:
   - stage: Build
     jobs:
-    - template: ${{ parameters.deployType }}/build.yml
-      parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
-        ${{ if eq(parameters.deployType, 'LambdaService') }}:
-          lambdas: ${{ parameters.lambdas }}
-          lambdasPath: ${{ parameters.lambdasPath }}
+    - job: Build
+      displayName: Build ${{ parameters.deployType }}
+      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+      variables:
+        CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
+      container: 
+        image: $(CONTAINER_IMAGE)
+        env:
+          CI: true
+      steps:
+      - template: ${{ parameters.deployType }}/build.yml
+        parameters:
+          ${{ if eq(parameters.deployType, 'LambdaService') }}:
+            lambdas: ${{ parameters.lambdas }}
+            lambdasPath: ${{ parameters.lambdasPath }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - stage: Deploy
