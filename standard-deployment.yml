@@ -73,22 +73,16 @@ stages:
 # Build Once, Deploy Anywhere
 - ${{ if in(parameters.deployType, 'LambdaService') }}:
   - stage: Build
+    condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
     jobs:
-    - job: Build
-      displayName: Build ${{ parameters.deployType }}
-      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-      variables:
-        CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
-      container: 
-        image: $(CONTAINER_IMAGE)
-        env:
-          CI: true
-      steps:
-      - template: ${{ parameters.deployType }}/build.yml
-        parameters:
-          ${{ if eq(parameters.deployType, 'LambdaService') }}:
-            lambdas: ${{ parameters.lambdas }}
-            lambdasPath: ${{ parameters.lambdasPath }}
+    - template: helpers/container-job.yml
+      parameters: 
+        job: Build Sources
+        displayName: Build ${{ parameters.deployType }}
+        steps:
+        - template: ${{ parameters.deployType }}/build.yml
+          parameters:
+            sources: ${{ parameters.sources }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - stage: Deploy
