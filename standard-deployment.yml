@@ -8,9 +8,9 @@ parameters:
 - name: terraformVersion
   type: string
   default: ''
-- name: buildContainerImage
+- name: useContainerImage
   type: string
-  default: ''
+  default: false
 - name: deployType
   type: string
   default: 'null'
@@ -44,33 +44,33 @@ variables:
       terraformVersion: ${{ parameters.terraformVersion }}
 
 stages:
-- stage: Validate
-  jobs:
-  - ${{ if eq(parameters.useTerraform, true) }}:
-    - template: Terraform/validate.yml
-
+${{ if ne(parameters.useContainerImage, 'false') }}:
+- stage: Initialise
+  jobs: 
   - job: GetContainerImage
     displayName: Get Container Image
     steps:
     - template: helpers/container-get-image.yml
       parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
+        useContainerImage: ${{ parameters.useContainerImage }}
 
-  - job: ValidateSources
-    displayName: Validate Sources
-    condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-    dependsOn: GetContainerImage
-    variables:
-      CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
-    container: 
-      image: $(CONTAINER_IMAGE)
-      env:
-        CI: true
-    steps:
-    - template: ${{ parameters.deployType }}/validate.yml
-      parameters:
-        sources: ${{ parameters.sources }}
+- stage: Validate
+  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+  jobs:
+  - ${{ if eq(parameters.useTerraform, true) }}:
+    - template: Terraform/validate.yml
 
+  - ${{ if ne(parameters.sources, '') }}:  
+    - template: helpers/container-job.yml
+      parameters: 
+        job: ValidateSources
+        displayName: Validate Sources
+        steps:
+        - template: ${{ parameters.deployType }}/validate.yml
+          parameters:
+            sources: ${{ parameters.sources }}
+
+# Build Once, Deploy Anywhere
 - ${{ if in(parameters.deployType, 'LambdaService') }}:
   - stage: Build
     jobs:
@@ -102,6 +102,7 @@ stages:
               lambdas: ${{ parameters.lambdas }}
               lambdasPath: ${{ parameters.lambdasPath }}
 
+# Build for Each Environment
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   - stage: Provision
     jobs:
