@@ -57,8 +57,6 @@ stages:
 
 - stage: Validate
   condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-  dependsOn: 
-  - Initialise
   jobs:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
@@ -79,6 +77,7 @@ stages:
     condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
     dependsOn: 
     - Initialise
+    - Validate
     jobs:
     - template: helpers/container-job.yml
       parameters: 
@@ -91,6 +90,10 @@ stages:
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - stage: Deploy
+    dependsOn:
+      - Validate
+      - ${{ if ne(parameters.useContainerImage, false) }}: 
+        - Initialise
     jobs:
     - template: Terraform/deploy.yml
       ${{ if eq(parameters.deployType, 'LambdaService') }}:
