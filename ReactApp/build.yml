@@ -6,7 +6,6 @@ parameters:
 jobs:
 - job: BuildApp
   displayName: Build App
-  dependsOn: Terraform
   variables:
     CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
   container: 

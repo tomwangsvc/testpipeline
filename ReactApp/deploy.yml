@@ -3,7 +3,6 @@ jobs:
   displayName: Deploy App
   dependsOn: 
   - BuildApp
-  - Terraform
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:

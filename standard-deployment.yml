@@ -54,10 +54,9 @@ stages:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
 
-- stage: BuildDeploy
-  displayName: Build and Deploy
-  jobs:
-  - ${{ if in(parameters.deployType, 'LambdaService') }}:
+- ${{ if in(parameters.deployType, 'LambdaService') }}:
+  - stage: Build
+    jobs:
     - template: ${{ parameters.deployType }}/build.yml
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
@@ -65,7 +64,9 @@ stages:
           lambdas: ${{ parameters.lambdas }}
           lambdasPath: ${{ parameters.lambdasPath }}
 
-  - ${{ if eq(parameters.useTerraform, true) }}:
+- ${{ if eq(parameters.useTerraform, true) }}:
+  - stage: Deploy
+    jobs:
     - template: Terraform/deploy.yml
       ${{ if eq(parameters.deployType, 'LambdaService') }}:
         parameters:
@@ -74,10 +75,13 @@ stages:
             parameters: 
               lambdas: ${{ parameters.lambdas }}
 
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - template: ${{ parameters.deployType }}/build.yml
-      parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
+- ${{ if in(parameters.deployType, 'ReactApp') }}:
+  - stage: Provision
+    jobs:
+    - ${{ if in(parameters.deployType, 'ReactApp') }}:
+      - template: ${{ parameters.deployType }}/build.yml
+        parameters:
+          buildContainerImage: ${{ parameters.buildContainerImage }}
 
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - template: ${{ parameters.deployType }}/deploy.yml                  
+    - ${{ if in(parameters.deployType, 'ReactApp') }}:
+      - template: ${{ parameters.deployType }}/deploy.yml                  

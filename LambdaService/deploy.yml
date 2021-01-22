@@ -1,6 +1,8 @@
 parameters:
 - name: lambdas
   type: object
+- name: lambdasPath
+  type: string
 
 steps:
 - ${{ each lambdaName in parameters.lambdas }}:
