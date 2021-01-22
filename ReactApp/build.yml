@@ -1,37 +1,23 @@
-parameters:
-- name: buildContainerImage
-  type: string
-  default: ''
+steps:
+- checkout: self
 
-jobs:
-- job: BuildApp
+- download: current
+  artifact: tfoutput-$(ENVIRONMENT_NAME)
+  displayName: Get Terraform Outputs
+
+- task: Cache@2
+  displayName: Check Dependency Cache
+  inputs:
+    key: yarn | "$(Agent.OS)" | yarn.lock
+    path: node_modules
+    cacheHitVar: CACHE_RESTORED
+    restoreKeys: |
+      yarn | $(Agent.OS)
+      yarn
+
+- script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
-  variables:
-    CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
-  container: 
-    image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
-  steps:
-  - checkout: self
 
-  - download: current
-    artifact: tfoutput-$(ENVIRONMENT_NAME)
-    displayName: Get Terraform Outputs
-
-  - task: Cache@2
-    displayName: Check Dependency Cache
-    inputs:
-      key: yarn | "$(Agent.OS)" | yarn.lock
-      path: node_modules
-      cacheHitVar: CACHE_RESTORED
-      restoreKeys: |
-        yarn | $(Agent.OS)
-        yarn
-
-  - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
-    displayName: Build App
-
-  - publish: $(System.DefaultWorkingDirectory)/build/
-    artifact: react-app-$(ENVIRONMENT_NAME)
-    displayName: Publish App Artifact
+- publish: $(System.DefaultWorkingDirectory)/build/
+  artifact: react-app-$(ENVIRONMENT_NAME)
+  displayName: Publish App Artifact

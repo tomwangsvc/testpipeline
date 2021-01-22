@@ -71,13 +71,17 @@ stages:
           parameters:
             sources: ${{ parameters.sources }}
 
-# Build Once, Deploy Anywhere
-- ${{ if in(parameters.deployType, 'LambdaService') }}:
+- ${{ if ne(parameters.sources, '') }}:
   - stage: Build
-    condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+    ${{ if in(parameters.deployType, 'LambdaService') }}:
+      # Build once, deploy anywhere
+      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
     dependsOn: 
     - Initialise
     - Validate
+    - ${{ if in(parameters.deployType, 'ReactApp') }}:
+      # Build for each environment, depending on infrastructure
+      - Deploy
     jobs:
     - template: helpers/container-job.yml
       parameters: 
@@ -98,22 +102,24 @@ stages:
         - Build
     jobs:
     - template: Terraform/deploy.yml
-      ${{ if eq(parameters.deployType, 'LambdaService') }}:
+      ${{ if in(parameters.deployType, 'LambdaService') }}:
         parameters:
           preDeploy: 
-          - template: LambdaService/deploy.yml
-            parameters: 
-              lambdas: ${{ parameters.lambdas }}
-              lambdasPath: ${{ parameters.lambdasPath }}
+          - template: ${{ parameters.deployType }}/deploy.yml
+            parameters:
+              sources: ${{ parameters.sources }}
 
-# Build for Each Environment
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
+  # Provision each environment, depending on infrastructure
   - stage: Provision
     jobs:
-    - ${{ if in(parameters.deployType, 'ReactApp') }}:
-      - template: ${{ parameters.deployType }}/build.yml
-        parameters:
-          buildContainerImage: ${{ parameters.buildContainerImage }}
-
-    - ${{ if in(parameters.deployType, 'ReactApp') }}:
-      - template: ${{ parameters.deployType }}/deploy.yml                  
+    - deployment: ProvisionResources
+      displayName: Provision ${{ parameters.deployType }}
+      dependsOn: 
+      - Deploy
+      environment: $(ENVIRONMENT_NAME)
+      strategy:
+        runOnce:
+          deploy:  
+            steps:
+            - template: ${{ parameters.deployType }}/deploy.yml                  
