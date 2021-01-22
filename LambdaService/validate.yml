@@ -1,47 +1,22 @@
 parameters:
-- name: buildContainerImage
-  type: string
-  default: ''
-- name: lambdas
+- name: sources
   type: object
-- name: lambdasPath
-  type: string
 
-jobs:
-- job: GetContainerImage
-  displayName: Get Container Image
-  steps:
-  - template: ../helpers/container-get-image.yml
-    parameters:
-      buildContainerImage: ${{ parameters.buildContainerImage }}
+steps:
+- ${{ each lambdaName in parameters.sources }}:
+  - task: Cache@2
+    displayName: Check ${{ lambdaName }} Dependency Cache
+    inputs:
+      key: npm | test | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+      path: lambdas/${{ lambdaName }}/node_modules
+      cacheHitVar: CACHE_RESTORED
+      restoreKeys: npm | test | $(Agent.OS)
 
-- job: ValidateLambdas
-  displayName: Validate Lambdas
-  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-  dependsOn: GetContainerImage
-  variables:
-    CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
-  container: 
-    image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
-  steps:
-  - ${{ each lambdaName in parameters.lambdas }}:
-    - task: Cache@2
-      displayName: Check ${{ lambdaName }} Dependency Cache
-      inputs:
-        key: npm | test | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
-        path: ${{ parameters.lambdasPath }}/${{ lambdaName }}/node_modules
-        cacheHitVar: CACHE_RESTORED
-        restoreKeys: |
-          npm | $(Agent.OS)
-          npm
+  - script: npm install
+    displayName: Install ${{ lambdaName }} Dependencies
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    workingDirectory: lambdas/${{ lambdaName }}
 
-    - script: npm install
-      displayName: Install ${{ lambdaName }} Dependencies
-      condition: ne(variables.CACHE_RESTORED, 'true')
-      workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
-
-    - script: npm test
-      displayName: Unit Test ${{ lambdaName }}
-      workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
+  - script: npm test
+    displayName: Unit Test ${{ lambdaName }}
+    workingDirectory: lambdas/${{ lambdaName }}

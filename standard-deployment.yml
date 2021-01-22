@@ -24,6 +24,9 @@ parameters:
 - name: lambdasPath
   type: string
   default: ./lambdas
+- name: sources
+  type: object
+  default: ''
 
 variables:
 - template: helpers/select-environment.yml
@@ -43,16 +46,30 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - ${{ if in(parameters.deployType, 'ReactApp', 'LambdaService') }}:
-    - template: ${{ parameters.deployType }}/validate.yml
-      parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
-        ${{ if eq(parameters.deployType, 'LambdaService') }}:
-          lambdas: ${{ parameters.lambdas }}
-          lambdasPath: ${{ parameters.lambdasPath }}
-
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
+
+  - job: GetContainerImage
+    displayName: Get Container Image
+    steps:
+    - template: helpers/container-get-image.yml
+      parameters:
+        buildContainerImage: ${{ parameters.buildContainerImage }}
+
+  - job: ValidateSources
+    displayName: Validate Sources
+    condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+    dependsOn: GetContainerImage
+    variables:
+      CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
+    container: 
+      image: $(CONTAINER_IMAGE)
+      env:
+        CI: true
+    steps:
+    - template: ${{ parameters.deployType }}/validate.yml
+      parameters:
+        sources: ${{ parameters.sources }}
 
 - ${{ if in(parameters.deployType, 'LambdaService') }}:
   - stage: Build
