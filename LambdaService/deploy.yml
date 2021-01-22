@@ -11,5 +11,5 @@ steps:
     artifact: ${{ lambdaName }}.zip
     displayName: Get ${{ lambdaName }} Artifact
   
-  - script: mv $(Pipeline.Workspace)/${{ lambdaName }}.zip terraform/build
+  - script: mv $(Pipeline.Workspace)/${{ lambdaName }}/${{ lambdaName }}.zip terraform/build/${{ lambdaName }}.zip
     displayName: Stage ${{ lambdaName }} Artifact

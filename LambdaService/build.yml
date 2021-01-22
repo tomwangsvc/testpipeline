@@ -21,11 +21,11 @@ steps:
     displayName: Zip ${{ lambdaName }} Lambda
     inputs:
       rootFolderOrFile: lambdas/${{ lambdaName }}
-      includeRootFolder: true
+      includeRootFolder: false
       archiveType: zip
       archiveFile: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
       replaceExistingArchive: true
 
   - publish: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
-    artifact: ${{ lambdaName }}.zip
+    artifact: ${{ lambdaName }}
     displayName: Publish ${{ lambdaName }} Artifact
