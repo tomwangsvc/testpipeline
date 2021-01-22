@@ -18,12 +18,6 @@ parameters:
   - 'null'
   - 'ReactApp'
   - 'LambdaService'
-- name: lambdas
-  type: object
-  default: false
-- name: lambdasPath
-  type: string
-  default: ./lambdas
 - name: sources
   type: object
   default: ''
@@ -65,7 +59,7 @@ stages:
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
-        displayName: Validate Sources
+        displayName: Validate Source Code
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
           parameters:
