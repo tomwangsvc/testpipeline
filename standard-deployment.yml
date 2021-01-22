@@ -104,7 +104,7 @@ stages:
     - template: Terraform/deploy.yml
       ${{ if in(parameters.deployType, 'LambdaService') }}:
         parameters:
-          preDeploy: 
+          preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
             parameters:
               sources: ${{ parameters.sources }}
