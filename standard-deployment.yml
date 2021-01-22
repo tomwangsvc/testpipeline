@@ -17,9 +17,9 @@ parameters:
 # determine what set of templates will be used for the pipeline
 - name: deployType 
   type: string
-  default: 'null'
+  default: ''
   values:
-  - 'null'
+  - ''
   - 'ReactApp'
   - 'LambdaService'
 # describe your source code as required by the deployType template
