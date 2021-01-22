@@ -44,15 +44,15 @@ variables:
       terraformVersion: ${{ parameters.terraformVersion }}
 
 stages:
-${{ if ne(parameters.useContainerImage, 'false') }}:
-- stage: Initialise
-  jobs: 
-  - job: GetContainerImage
-    displayName: Get Container Image
-    steps:
-    - template: helpers/container-get-image.yml
-      parameters:
-        useContainerImage: ${{ parameters.useContainerImage }}
+- ${{ if ne(parameters.useContainerImage, false) }}:
+  - stage: Initialise
+    jobs: 
+    - job: GetContainerImage
+      displayName: Get Container Image
+      steps:
+      - template: helpers/container-get-image.yml
+        parameters:
+          useContainerImage: ${{ parameters.useContainerImage }}
 
 - stage: Validate
   condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
