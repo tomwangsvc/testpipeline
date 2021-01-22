@@ -13,5 +13,3 @@ steps:
   
   - script: mv $(Pipeline.Workspace)/${{ lambdaName }}/${{ lambdaName }}.zip terraform/build/${{ lambdaName }}.zip
     displayName: Stage ${{ lambdaName }} Artifact
-
-- script: ls -a terraform/build/
