@@ -16,3 +16,16 @@ steps:
     displayName: Install ${{ lambdaName }} Production Dependencies
     condition: ne(variables.CACHE_RESTORED, 'true')
     workingDirectory: lambdas/${{ lambdaName }}
+
+  - task: ArchiveFiles@2
+    displayName: Zip ${{ lambdaName }} Lambda
+    inputs:
+      rootFolderOrFile: lambdas/${{ lambdaName }}
+      includeRootFolder: true
+      archiveType: zip
+      archiveFile: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
+      replaceExistingArchive: true
+
+  - publish: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
+    artifact: ${{ lambdaName }}.zip
+    displayName: Publish ${{ lambdaName }} Artifact

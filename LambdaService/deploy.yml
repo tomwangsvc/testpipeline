@@ -4,12 +4,6 @@ parameters:
 
 steps:
 - ${{ each lambdaName in parameters.sources }}:
-  - task: Cache@2
-    displayName: Cache ${{ lambdaName }} Prod Dependencies
-    inputs:
-      key: npm | prod | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
-      path: lambdas/${{ lambdaName }}/node_modules
-      cacheHitVar: CACHE_RESTORED
-      restoreKeys: |
-        npm | $(Agent.OS)
-        npm
+  - download: current
+    artifact: ${{ lambdaName }}.zip
+    displayName: Get ${{ lambdaName }} Artifact
