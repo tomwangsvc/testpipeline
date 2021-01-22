@@ -44,6 +44,7 @@ variables:
       terraformVersion: ${{ parameters.terraformVersion }}
 
 stages:
+# Find the docker image for later stages
 - ${{ if ne(parameters.useContainerImage, false) }}:
   - stage: Initialise
     jobs: 
@@ -56,6 +57,8 @@ stages:
 
 - stage: Validate
   condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+  dependsOn: 
+  - Initialise
   jobs:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
@@ -74,6 +77,8 @@ stages:
 - ${{ if in(parameters.deployType, 'LambdaService') }}:
   - stage: Build
     condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+    dependsOn: 
+    - Initialise
     jobs:
     - template: helpers/container-job.yml
       parameters: 
