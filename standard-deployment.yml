@@ -18,10 +18,12 @@ parameters:
   - 'null'
   - 'ReactApp'
   - 'LambdaService'
-- name: buildLambdas
+- name: lambdas
   type: object
-  default:
-  - ''
+  default: false
+- name: lambdasPath
+  type: string
+  default: ./lambdas
 
 variables:
 - template: helpers/select-environment.yml
@@ -46,7 +48,7 @@ stages:
       parameters:
         buildContainerImage: ${{ parameters.buildContainerImage }}
         ${{ if eq(parameters.deployType, 'LambdaService') }}:
-          buildLambdas: ${{ parameters.buildLambdas }}
+          lambdas: ${{ parameters.lambdas }}
 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml

@@ -2,8 +2,10 @@ parameters:
 - name: buildContainerImage
   type: string
   default: ''
-- name: buildLambdas
+- name: lambdas
   type: object
+- name: lambdasPath
+  type: string
 
 jobs:
 - job: GetContainerImage
@@ -15,6 +17,7 @@ jobs:
 
 - job: ValidateLambdas
   displayName: Validate Lambdas
+  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   dependsOn: GetContainerImage
   variables:
     CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
@@ -23,27 +26,26 @@ jobs:
     env:
       CI: true
   steps:
-  - ${{ each lambdaName in parameters.buildLambdas }}:
+  - ${{ each lambdaName in parameters.lambdas }}:
     - task: Cache@2
       displayName: Check ${{ lambdaName }} Dependency Cache
       inputs:
-        key: npm | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package-lock.json
-        path: lambdas/${{ lambdaName }}/node_modules
+        key: npm | test | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+        path: ${{ parameters.lambdasPath }}/${{ lambdaName }}/node_modules
         cacheHitVar: CACHE_RESTORED
         restoreKeys: |
           npm | $(Agent.OS)
           npm
 
-    - script: npm install --only=prod
+    - script: npm install
       displayName: Install ${{ lambdaName }} Dependencies
       condition: ne(variables.CACHE_RESTORED, 'true')
-      workingDirectory: lambdas/${{ lambdaName }}
+      workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
 
     - script: npm test
       displayName: Unit Test ${{ lambdaName }}
-      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-      workingDirectory: lambdas/${{ lambdaName }}
+      workingDirectory: ${{ parameters.lambdasPath }}/${{ lambdaName }}
 
-    - publish: $(System.DefaultWorkingDirectory)/lambdas/${{ lambdaName }}
+    - publish: ${{ parameters.lambdasPath }}/${{ lambdaName }}
       displayName: Publish ${{ lambdaName }} Artifact
       artifact: ${{ lambdaName }}
