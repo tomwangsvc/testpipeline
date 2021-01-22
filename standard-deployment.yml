@@ -56,7 +56,6 @@ stages:
           useContainerImage: ${{ parameters.useContainerImage }}
 
 - stage: Validate
-  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   jobs:
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
@@ -66,6 +65,7 @@ stages:
       parameters: 
         job: ValidateSources
         displayName: Validate Source Code
+        condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
           parameters:
