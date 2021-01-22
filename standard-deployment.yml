@@ -69,7 +69,7 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
           parameters:
-            hasSourceCode: ${{ parameters.hasSourceCode }}
+            sources: ${{ parameters.hasSourceCode }}
 
 - ${{ if ne(parameters.hasSourceCode, false) }}:
   - stage: Build
@@ -90,7 +90,7 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
-            hasSourceCode: ${{ parameters.hasSourceCode }}
+            sources: ${{ parameters.hasSourceCode }}
 
 - ${{ if eq(parameters.useTerraform, true) }}:
   - stage: Deploy
@@ -107,7 +107,7 @@ stages:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
             parameters:
-              hasSourceCode: ${{ parameters.hasSourceCode }}
+              sources: ${{ parameters.hasSourceCode }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
