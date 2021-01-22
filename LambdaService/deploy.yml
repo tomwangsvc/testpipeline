@@ -8,7 +8,7 @@ steps:
 
 - ${{ each lambdaName in parameters.sources }}:
   - download: current
-    artifact: ${{ lambdaName }}.zip
+    artifact: ${{ lambdaName }}
     displayName: Get ${{ lambdaName }} Artifact
   
   - script: mv $(Pipeline.Workspace)/${{ lambdaName }}/${{ lambdaName }}.zip terraform/build/${{ lambdaName }}.zip
