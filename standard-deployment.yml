@@ -74,6 +74,7 @@ stages:
           - template: LambdaService/deploy.yml
             parameters: 
               lambdas: ${{ parameters.lambdas }}
+              lambdasPath: ${{ parameters.lambdasPath }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   - stage: Provision
