@@ -77,7 +77,7 @@ stages:
     jobs:
     - template: helpers/container-job.yml
       parameters: 
-        job: Build Sources
+        job: BuildSources
         displayName: Build ${{ parameters.deployType }}
         steps:
         - template: ${{ parameters.deployType }}/build.yml
