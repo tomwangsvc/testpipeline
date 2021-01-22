@@ -49,6 +49,7 @@ stages:
         buildContainerImage: ${{ parameters.buildContainerImage }}
         ${{ if eq(parameters.deployType, 'LambdaService') }}:
           lambdas: ${{ parameters.lambdas }}
+          lambdasPath: ${{ parameters.lambdasPath }}
 
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
