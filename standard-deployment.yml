@@ -57,11 +57,22 @@ stages:
 - stage: BuildDeploy
   displayName: Build and Deploy
   jobs:
+  - ${{ if in(parameters.deployType, 'LambdaService') }}:
+    - template: ${{ parameters.deployType }}/build.yml
+      parameters:
+        buildContainerImage: ${{ parameters.buildContainerImage }}
+        ${{ if eq(parameters.deployType, 'LambdaService') }}:
+          lambdas: ${{ parameters.lambdas }}
+          lambdasPath: ${{ parameters.lambdasPath }}
+
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/deploy.yml
-      parameters:
-        deployType: ${{ parameters.deployType }}
-        lambdas: ${{ parameters.lambdas }}
+      ${{ if eq(parameters.deployType, 'LambdaService') }}:
+        parameters:
+          preDeploy: 
+          - template: LambdaService/deploy.yml
+            parameters: 
+              lambdas: ${{ parameters.lambdas }}
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - template: ${{ parameters.deployType }}/build.yml

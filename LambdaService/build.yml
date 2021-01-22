@@ -8,8 +8,9 @@ parameters:
   type: string
 
 jobs:
-- job: BuildLambda
-  displayName: Build Lambda
+- job: BuildLambdas
+  displayName: Build Lambdas
+  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   variables:
     CONTAINER_IMAGE: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
   container: 

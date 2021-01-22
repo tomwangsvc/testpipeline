@@ -1,8 +1,7 @@
 parameters:
-- name: deployType
-  type: string
-- name: lambdas
-  type: object
+- name: preDeploy
+  type: stepList
+  default: []
 
 jobs:
 - deployment: Terraform
@@ -13,10 +12,7 @@ jobs:
         steps:
         - checkout: self
 
-        - ${{ if eq(parameters.deployType, 'LambdaService') }}:
-          - template: ../LambdaService/deploy.yml
-            parameters:
-              lambdas: ${{ parameters.lambdas }}
+        - ${{ parameters.preDeploy }}
               
         - download: current
           artifact: tfplan-$(ENVIRONMENT_NAME)
