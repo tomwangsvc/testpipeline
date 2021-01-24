@@ -112,11 +112,11 @@ stages:
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
   - stage: Provision
+    dependsOn: 
+      - Deploy
     jobs:
     - deployment: ProvisionResources
       displayName: Provision ${{ parameters.deployType }}
-      dependsOn: 
-      - Deploy
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
