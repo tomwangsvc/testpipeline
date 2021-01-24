@@ -114,6 +114,7 @@ stages:
   - stage: Provision
     dependsOn: 
       - Deploy
+      - Build
     jobs:
     - deployment: ProvisionResources
       displayName: Provision ${{ parameters.deployType }}
