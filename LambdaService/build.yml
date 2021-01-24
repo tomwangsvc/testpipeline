@@ -1,0 +1,31 @@
+parameters:
+- name: sources
+  type: object
+
+steps:
+- ${{ each lambdaName in parameters.sources }}:
+  - task: Cache@2
+    displayName: Cache ${{ lambdaName }} Prod Dependencies
+    inputs:
+      key: npm | prod | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+      path: lambdas/${{ lambdaName }}/node_modules
+      cacheHitVar: CACHE_RESTORED
+      restoreKeys: npm | prod | $(Agent.OS)
+
+  - script: npm install --only=prod
+    displayName: Install ${{ lambdaName }} Production Dependencies
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    workingDirectory: lambdas/${{ lambdaName }}
+
+  - task: ArchiveFiles@2
+    displayName: Zip ${{ lambdaName }} Lambda
+    inputs:
+      rootFolderOrFile: lambdas/${{ lambdaName }}
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
+      replaceExistingArchive: true
+
+  - publish: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
+    artifact: ${{ lambdaName }}
+    displayName: Publish ${{ lambdaName }} Artifact

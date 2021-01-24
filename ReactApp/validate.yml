@@ -1,40 +1,17 @@
-parameters:
-- name: buildContainerImage
-  type: string
-  default: ''
+steps:
+- task: Cache@2
+  displayName: Check Dependency Cache
+  inputs:
+    key: yarn | "$(Agent.OS)" | yarn.lock
+    path: node_modules
+    cacheHitVar: CACHE_RESTORED
+    restoreKeys: |
+      yarn | $(Agent.OS)
+      yarn
 
-jobs:
-- job: GetContainerImage
-  displayName: Get Container Image
-  steps:
-  - template: ../helpers/container-get-image.yml
-    parameters:
-      buildContainerImage: ${{ parameters.buildContainerImage }}
+- script: yarn --frozen-lockfile
+  displayName: Install Dependencies
+  condition: ne(variables.CACHE_RESTORED, 'true')
 
-- job: ValidateApp
-  displayName: Validate App
-  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-  dependsOn: GetContainerImage
-  variables:
-    CONTAINER_IMAGE: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
-  container: 
-    image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
-  steps:
-  - task: Cache@2
-    displayName: Check Dependency Cache
-    inputs:
-      key: 'yarn | "$(Agent.OS)" | yarn.lock'
-      path: 'node_modules'
-      cacheHitVar: 'CACHE_RESTORED'
-      restoreKeys: |
-        yarn | $(Agent.OS)
-        yarn
-
-  - script: yarn --frozen-lockfile
-    displayName: Install Dependencies
-    condition: ne(variables.CACHE_RESTORED, 'true')
-
-  - script: yarn test
-    displayName: Unit Test
+- script: yarn test
+  displayName: Unit Test

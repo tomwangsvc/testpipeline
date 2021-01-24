@@ -1,3 +1,8 @@
+parameters:
+- name: preDeploySteps
+  type: stepList
+  default: []
+
 jobs:
 - deployment: Terraform
   environment: $(ENVIRONMENT_NAME)
@@ -7,6 +12,8 @@ jobs:
         steps:
         - checkout: self
 
+        - ${{ parameters.preDeploySteps }}
+              
         - download: current
           artifact: tfplan-$(ENVIRONMENT_NAME)
           displayName: Get tfplan

@@ -2,21 +2,31 @@ parameters:
 - name: defaultBranchName
   type: string
   default: 'master'
+# execute Terraform from this repo's '/terraform' directory
 - name: useTerraform
   type: boolean
   default: true
 - name: terraformVersion
   type: string
   default: ''
-- name: buildContainerImage
+# use a Docker container to run Validate and Build stages
+# expects a named image, otherwise uses your repo's devcontainer (default)
+- name: useContainerImage 
   type: string
-  default: ''
-- name: deployType
+  default: true
+# determine what set of templates will be used for the pipeline
+- name: deployType 
   type: string
   default: 'null'
   values:
   - 'null'
   - 'ReactApp'
+  - 'LambdaService'
+# describe your source code as required by the deployType template
+# e.g. list location(s) of source code that should be validated/built
+- name: hasSourceCode  
+  type: object
+  default: false
 
 variables:
 - template: helpers/select-environment.yml
@@ -34,26 +44,82 @@ variables:
       terraformVersion: ${{ parameters.terraformVersion }}
 
 stages:
+# Find the docker image for later stages
+- ${{ if ne(parameters.useContainerImage, false) }}:
+  - stage: Initialise
+    jobs: 
+    - job: GetContainerImage
+      displayName: Get Container Image
+      steps:
+      - template: helpers/container-get-image.yml
+        parameters:
+          useContainerImage: ${{ parameters.useContainerImage }}
+
 - stage: Validate
   jobs:
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - template: ${{ parameters.deployType }}/validate.yml
-      parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
-
   - ${{ if eq(parameters.useTerraform, true) }}:
     - template: Terraform/validate.yml
 
-- stage: BuildDeploy
-  displayName: Build and Deploy
-  jobs:
-  - ${{ if eq(parameters.useTerraform, true) }}:
+  - ${{ if ne(parameters.hasSourceCode, false) }}:  
+    - template: helpers/container-job.yml
+      parameters: 
+        job: ValidateSources
+        displayName: Validate Source Code
+        condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+        steps:
+        - template: ${{ parameters.deployType }}/validate.yml
+          parameters:
+            sources: ${{ parameters.hasSourceCode }}
+
+- ${{ if ne(parameters.hasSourceCode, false) }}:
+  - stage: Build
+    ${{ if in(parameters.deployType, 'LambdaService') }}:
+      # Build once, deploy anywhere
+      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+    dependsOn: 
+    - Initialise
+    - Validate
+    - ${{ if in(parameters.deployType, 'ReactApp') }}:
+      # Build for each environment, depending on infrastructure
+      - Deploy
+    jobs:
+    - template: helpers/container-job.yml
+      parameters: 
+        job: BuildSources
+        displayName: Build ${{ parameters.deployType }}
+        steps:
+        - template: ${{ parameters.deployType }}/build.yml
+          parameters:
+            sources: ${{ parameters.hasSourceCode }}
+
+- ${{ if eq(parameters.useTerraform, true) }}:
+  - stage: Deploy
+    dependsOn:
+      - Validate
+      - ${{ if ne(parameters.useContainerImage, false) }}: 
+        - Initialise
+      - ${{ if in(parameters.deployType, 'LambdaService') }}:
+        - Build
+    jobs:
     - template: Terraform/deploy.yml
+      ${{ if in(parameters.deployType, 'LambdaService') }}:
+        parameters:
+          preDeploySteps: 
+          - template: ${{ parameters.deployType }}/deploy.yml
+            parameters:
+              sources: ${{ parameters.hasSourceCode }}
 
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - template: ${{ parameters.deployType }}/build.yml
-      parameters:
-        buildContainerImage: ${{ parameters.buildContainerImage }}
-
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - template: ${{ parameters.deployType }}/deploy.yml                  
+- ${{ if in(parameters.deployType, 'ReactApp') }}:
+  # Provision each environment, depending on infrastructure
+  - stage: Provision
+    jobs:
+    - deployment: ProvisionResources
+      displayName: Provision ${{ parameters.deployType }}
+      dependsOn: 
+      - Deploy
+      environment: $(ENVIRONMENT_NAME)
+      strategy:
+        runOnce:
+          deploy:  
+            steps:
+            - template: ${{ parameters.deployType }}/deploy.yml                  

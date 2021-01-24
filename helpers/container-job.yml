@@ -1,0 +1,28 @@
+parameters:
+- name: job
+  type: string
+- name: displayName
+  type: string
+  default: ''
+- name: condition
+  type: string
+  default: ''
+- name: steps
+  type: stepList
+
+jobs:
+- job: ${{ parameters.job }}
+  ${{ if ne(parameters.displayName, '') }}:
+    displayName: ${{ parameters.displayName }}
+
+  ${{ if ne(parameters.condition, '') }}:
+    condition: ${{ parameters.condition }}
+
+  variables:
+    CONTAINER_IMAGE: $[ stageDependencies.Initialise.GetContainerImage.outputs['GetImage.url'] ]
+  container: 
+    image: $(CONTAINER_IMAGE)
+    env:
+      CI: true
+  steps:
+  - ${{ parameters.steps }}
