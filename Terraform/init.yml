@@ -11,7 +11,7 @@ steps:
     provider: $(TF_PROVIDER)
     command: init
     workingDirectory: $(TF_PATH)
-    commandOptions: -backend-config=role_arn=$(TF_VAR_AWS_ROLE_ARN)
+    commandOptions: -backend-config=role_arn=arn:aws:iam::$(AWS_ACCOUNT):role/wsl_role_deploy_Infrastructure
     backendServiceAWS: $(TF_SERVICE_CONNECTOR)
     backendAWSBucketName: $(TF_BACKEND_BUCKET)
     backendAWSKey: $(TF_BACKEND_KEY)
