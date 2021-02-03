@@ -8,22 +8,15 @@ steps:
     restoreKeys: npm | prod | $(Agent.OS)
 
 - script: |
-    for dir in ./*
-      do (cd "$dir" && npm install --only=prod && echo "$dir")
+    for dir in *
+      do (cd "$dir" && npm install --only=prod && zip -r "${stagingDir}/${dir}.zip .")
     done
   displayName: Install Production Dependencies
   condition: ne(variables.CACHE_RESTORED, 'true')
   workingDirectory: lambdas
+  env: 
+    stagingDir: $(Build.ArtifactStagingDirectory)
 
-# - task: ArchiveFiles@2
-#   displayName: Zip ${{ lambdaName }} Lambda
-#   inputs:
-#     rootFolderOrFile: lambdas/${{ lambdaName }}
-#     includeRootFolder: false
-#     archiveType: zip
-#     archiveFile: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
-#     replaceExistingArchive: true
-
-# - publish: $(Build.ArtifactStagingDirectory)/${{ lambdaName }}.zip
-#   artifact: ${{ lambdaName }}
-#   displayName: Publish ${{ lambdaName }} Artifact
+- publish: $(Build.ArtifactStagingDirectory)
+  artifact: lambdas
+  displayName: Publish Lambda Artifacts
