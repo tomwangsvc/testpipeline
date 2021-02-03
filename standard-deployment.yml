@@ -51,6 +51,8 @@ stages:
   jobs:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
 
   - ${{ if ne(parameters.deployType, 'null') }}:  
     - template: helpers/container-job.yml
@@ -94,6 +96,7 @@ stages:
         parameters:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
+          useTerraform: ${{ parameters.useTerraform }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
