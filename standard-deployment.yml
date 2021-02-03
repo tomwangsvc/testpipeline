@@ -68,9 +68,10 @@ stages:
     ${{ if in(parameters.deployType, 'LambdaService') }}:
       # Build once, deploy anywhere
       condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
-    dependsOn: 
-    - Initialise
+    dependsOn:
     - Validate
+    - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
+      - Initialise
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       # Build for each environment, depending on infrastructure
       - Deploy
@@ -86,7 +87,7 @@ stages:
   - stage: Deploy
     dependsOn:
     - Validate
-    - ${{ if ne(parameters.useContainerImage, false) }}: 
+    - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
       - Initialise
     - ${{ if in(parameters.deployType, 'LambdaService') }}:
       - Build
