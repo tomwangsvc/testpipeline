@@ -16,13 +16,9 @@ parameters:
   values: 
   - 'aws'
   - 'azurerm'
-- name: terraformVersion
-  type: string
-  default: ''
 
 variables:
   TF_PROVIDER: ${{ parameters.terraformProvider }}
-  TF_VERSION: ${{ parameters.terraformVersion }}
   TF_IN_AUTOMATION: true
   TF_INPUT: false
   TF_BACKEND_BUCKET: ${{ parameters.AWS_ACCOUNT }}-state

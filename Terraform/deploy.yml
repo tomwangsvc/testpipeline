@@ -2,6 +2,8 @@ parameters:
 - name: preDeploySteps
   type: stepList
   default: []
+- name: useTerraform
+  type: string
 
 jobs:
 - deployment: Terraform
@@ -19,6 +21,8 @@ jobs:
           displayName: Get tfplan
 
         - template: init.yml
+          parameters:
+            useTerraform: ${{ parameters.useTerraform }}
 
         - task: TerraformTaskV1@0
           displayName: Apply Terraform

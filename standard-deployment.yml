@@ -34,7 +34,6 @@ variables:
       ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
       repoName: $(Build.Repository.Name)
       sourcesDirectory: $(Build.SourcesDirectory)
-      terraformVersion: ${{ parameters.useTerraform }}
 
 stages:
 # Find the docker image for later stages

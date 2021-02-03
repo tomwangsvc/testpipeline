@@ -1,9 +1,13 @@
+parameters:
+- name: useTerraform
+  type: string
+
 steps:
-- ${{ if ne(parameters.terraformVersion, true) }}:
+- ${{ if ne(parameters.useTerraform, true) }}:
   - task: TerraformInstaller@0
     displayName: Install Terraform
     inputs:
-      terraformVersion: $(TF_VERSION)
+      terraformVersion: ${{ parameters.useTerraform }}
 
 - task: TerraformTaskV1@0
   displayName: Initialise Terraform
