@@ -3,7 +3,7 @@ steps:
   displayName: Cache Prod Dependencies
   inputs:
     key: npm | prod | "$(Agent.OS)" | lambdas/**/package.json
-    path: lambdas
+    path: lambdas/**/node_modules
     cacheHitVar: CACHE_RESTORED
     restoreKeys: npm | prod | $(Agent.OS)
 
