@@ -1,12 +1,4 @@
 steps:
-- task: Cache@2
-  displayName: Cache Prod Dependencies
-  inputs:
-    key: npm | prod | "$(Agent.OS)" | lambdas/**/package.json
-    path: lambdas/**/node_modules
-    cacheHitVar: CACHE_RESTORED
-    restoreKeys: npm | prod | $(Agent.OS)
-
 - script: |
     for dir in *
       do (cd "$dir" && npm install --only=prod && zip -r "${stagingDir}/${dir}.zip" .)
