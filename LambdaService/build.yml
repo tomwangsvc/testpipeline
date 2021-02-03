@@ -9,7 +9,7 @@ steps:
 
 - script: |
     for dir in ./*
-      do (cd "$dir" && npm install --only=prod)
+      do (cd "$dir" && npm install --only=prod && echo "$dir")
     done
   displayName: Install Production Dependencies
   condition: ne(variables.CACHE_RESTORED, 'true')
