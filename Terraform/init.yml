@@ -1,5 +1,5 @@
 steps:
-- ${{ if ne(parameters.terraformVersion, '') }}:
+- ${{ if ne(parameters.terraformVersion, true) }}:
   - task: TerraformInstaller@0
     displayName: Install Terraform
     inputs:
