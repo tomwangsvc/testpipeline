@@ -94,9 +94,9 @@ stages:
     - template: Terraform/deploy.yml
       ${{ if in(parameters.deployType, 'LambdaService') }}:
         parameters:
+          useTerraform: ${{ parameters.useTerraform }}
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
-          useTerraform: ${{ parameters.useTerraform }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
