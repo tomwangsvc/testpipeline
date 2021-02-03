@@ -13,6 +13,6 @@ steps:
 #     condition: ne(variables.CACHE_RESTORED, 'true')
 #     workingDirectory: lambdas/${{ lambdaName }}
 
-#   - script: npm test
-#     displayName: Unit Test ${{ lambdaName }}
-#     workingDirectory: lambdas/${{ lambdaName }}
+  - script: npm test
+    displayName: Unit Test
+    workingDirectory: lambdas/assetLocationLookup
