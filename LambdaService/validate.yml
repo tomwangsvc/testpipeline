@@ -1,18 +1,7 @@
 steps:
-# - ${{ each lambdaName in parameters.sources }}:
-#   - task: Cache@2
-#     displayName: Check ${{ lambdaName }} Dependency Cache
-#     inputs:
-#       key: npm | test | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
-#       path: lambdas/${{ lambdaName }}/node_modules
-#       cacheHitVar: CACHE_RESTORED
-#       restoreKeys: npm | test | $(Agent.OS)
-
-#   - script: npm install
-#     displayName: Install ${{ lambdaName }} Dependencies
-#     condition: ne(variables.CACHE_RESTORED, 'true')
-#     workingDirectory: lambdas/${{ lambdaName }}
-
-  - script: npm test
-    displayName: Unit Test
-    workingDirectory: lambdas/assetLocationLookup
+- script: |
+    for dir in *
+      do (cd "$dir" && npm install && npm test)
+    done
+  displayName: Unit Tests
+  workingDirectory: lambdas
