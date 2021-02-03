@@ -4,6 +4,7 @@ parameters:
   default: []
 - name: useTerraform
   type: string
+  default: true
 
 jobs:
 - deployment: Terraform

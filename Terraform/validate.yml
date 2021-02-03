@@ -1,6 +1,7 @@
 parameters:
 - name: useTerraform
   type: string
+  default: true
   
 jobs:
 - job: TerraformPlan

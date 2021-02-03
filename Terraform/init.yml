@@ -1,6 +1,7 @@
 parameters:
 - name: useTerraform
   type: string
+  default: true
 
 steps:
 - ${{ if ne(parameters.useTerraform, true) }}:
