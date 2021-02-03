@@ -1,22 +1,18 @@
-parameters:
-- name: sources
-  type: object
-
 steps:
-- ${{ each lambdaName in parameters.sources }}:
-  - task: Cache@2
-    displayName: Check ${{ lambdaName }} Dependency Cache
-    inputs:
-      key: npm | test | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
-      path: lambdas/${{ lambdaName }}/node_modules
-      cacheHitVar: CACHE_RESTORED
-      restoreKeys: npm | test | $(Agent.OS)
+# - ${{ each lambdaName in parameters.sources }}:
+#   - task: Cache@2
+#     displayName: Check ${{ lambdaName }} Dependency Cache
+#     inputs:
+#       key: npm | test | "$(Agent.OS)" | lambdas/${{ lambdaName }}/package.json
+#       path: lambdas/${{ lambdaName }}/node_modules
+#       cacheHitVar: CACHE_RESTORED
+#       restoreKeys: npm | test | $(Agent.OS)
 
-  - script: npm install
-    displayName: Install ${{ lambdaName }} Dependencies
-    condition: ne(variables.CACHE_RESTORED, 'true')
-    workingDirectory: lambdas/${{ lambdaName }}
+#   - script: npm install
+#     displayName: Install ${{ lambdaName }} Dependencies
+#     condition: ne(variables.CACHE_RESTORED, 'true')
+#     workingDirectory: lambdas/${{ lambdaName }}
 
-  - script: npm test
-    displayName: Unit Test ${{ lambdaName }}
-    workingDirectory: lambdas/${{ lambdaName }}
+#   - script: npm test
+#     displayName: Unit Test ${{ lambdaName }}
+#     workingDirectory: lambdas/${{ lambdaName }}

@@ -1,15 +1,11 @@
-parameters:
-- name: sources
-  type: object
-
 steps:
 - script: mkdir -p terraform/build/
   displayName: Make Lambda .zip Directory
 
-- ${{ each lambdaName in parameters.sources }}:
-  - download: current
-    artifact: ${{ lambdaName }}
-    displayName: Get ${{ lambdaName }} Artifact
+# - ${{ each lambdaName in parameters.sources }}:
+#   - download: current
+#     artifact: ${{ lambdaName }}
+#     displayName: Get ${{ lambdaName }} Artifact
   
-  - script: mv $(Pipeline.Workspace)/${{ lambdaName }}/${{ lambdaName }}.zip terraform/build/${{ lambdaName }}.zip
-    displayName: Stage ${{ lambdaName }} Artifact
+#   - script: mv $(Pipeline.Workspace)/${{ lambdaName }}/${{ lambdaName }}.zip terraform/build/${{ lambdaName }}.zip
+#     displayName: Stage ${{ lambdaName }} Artifact
