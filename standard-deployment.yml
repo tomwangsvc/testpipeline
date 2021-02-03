@@ -37,7 +37,7 @@ variables:
 
 stages:
 # Find the docker image for later stages
-- ${{ if ne(parameters.useContainerImage, false) }}:
+- ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
   - stage: Initialise
     jobs: 
     - job: GetContainerImage
