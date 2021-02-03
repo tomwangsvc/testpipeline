@@ -2,18 +2,6 @@ parameters:
 - name: defaultBranchName
   type: string
   default: 'master'
-# execute Terraform from this repo's '/terraform' directory
-- name: useTerraform
-  type: boolean
-  default: true
-- name: terraformVersion
-  type: string
-  default: ''
-# use a Docker container to run Validate and Build stages
-# expects a named image, otherwise uses your repo's devcontainer (default)
-- name: useContainerImage 
-  type: string
-  default: true
 # determine what set of templates will be used for the pipeline
 - name: deployType 
   type: string
@@ -22,18 +10,23 @@ parameters:
   - 'null'
   - 'ReactApp'
   - 'LambdaService'
-# describe your source code as required by the deployType template
-# e.g. list location(s) of source code that should be validated/built
-- name: hasSourceCode  
-  type: object
-  default: false
+# use a Docker container to run Validate and Build stages
+# expects a named image, otherwise uses your repo's devcontainer (default)
+- name: useContainerImage 
+  type: string
+  default: true
+# execute Terraform from the repo's '/terraform' directory
+# pass a valid terraform version number to force use of that version
+- name: useTerraform
+  type: string
+  default: true
 
 variables:
 - template: helpers/select-environment.yml
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
 
-- ${{ if eq(parameters.useTerraform, true) }}:
+- ${{ if ne(parameters.useTerraform, false) }}:
   - template: Terraform/environment.yml
     parameters:
       AWS_ACCOUNT: $(AWS_ACCOUNT)  
@@ -41,7 +34,7 @@ variables:
       ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
       repoName: $(Build.Repository.Name)
       sourcesDirectory: $(Build.SourcesDirectory)
-      terraformVersion: ${{ parameters.terraformVersion }}
+      terraformVersion: ${{ parameters.useTerraform }}
 
 stages:
 # Find the docker image for later stages
@@ -57,10 +50,10 @@ stages:
 
 - stage: Validate
   jobs:
-  - ${{ if eq(parameters.useTerraform, true) }}:
+  - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
 
-  - ${{ if ne(parameters.hasSourceCode, false) }}:  
+  - ${{ if ne(parameters.deployType, 'null') }}:  
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
@@ -68,10 +61,8 @@ stages:
         condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
-          parameters:
-            sources: ${{ parameters.hasSourceCode }}
 
-- ${{ if ne(parameters.hasSourceCode, false) }}:
+- ${{ if ne(parameters.deployType, 'null') }}:
   - stage: Build
     ${{ if in(parameters.deployType, 'LambdaService') }}:
       # Build once, deploy anywhere
@@ -89,25 +80,21 @@ stages:
         displayName: Build ${{ parameters.deployType }}
         steps:
         - template: ${{ parameters.deployType }}/build.yml
-          parameters:
-            sources: ${{ parameters.hasSourceCode }}
 
-- ${{ if eq(parameters.useTerraform, true) }}:
+- ${{ if ne(parameters.useTerraform, false) }}:
   - stage: Deploy
     dependsOn:
-      - Validate
-      - ${{ if ne(parameters.useContainerImage, false) }}: 
-        - Initialise
-      - ${{ if in(parameters.deployType, 'LambdaService') }}:
-        - Build
+    - Validate
+    - ${{ if ne(parameters.useContainerImage, false) }}: 
+      - Initialise
+    - ${{ if in(parameters.deployType, 'LambdaService') }}:
+      - Build
     jobs:
     - template: Terraform/deploy.yml
       ${{ if in(parameters.deployType, 'LambdaService') }}:
         parameters:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
-            parameters:
-              sources: ${{ parameters.hasSourceCode }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
