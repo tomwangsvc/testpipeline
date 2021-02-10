@@ -8,8 +8,9 @@ parameters:
   default: 'null'
   values:
   - 'null'
-  - 'ReactApp'
-  - 'LambdaService'
+  - ADO
+  - ReactApp
+  - LambdaService
 # use a Docker container to run Validate and Build stages
 # expects a named image, otherwise uses your repo's devcontainer (default)
 - name: useContainerImage 
@@ -26,7 +27,7 @@ variables:
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
 
-- ${{ if ne(parameters.useTerraform, false) }}:
+- ${{ if or(ne(parameters.useTerraform, false), eq(parameters.deployType, 'ADO')) }}:
   - template: Terraform/environment.yml
     parameters:
       AWS_ACCOUNT: $(AWS_ACCOUNT)  
@@ -83,21 +84,25 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
 
-- ${{ if ne(parameters.useTerraform, false) }}:
-  - stage: Deploy
-    dependsOn:
-    - Validate
-    - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
-      - Initialise
-    - ${{ if in(parameters.deployType, 'LambdaService') }}:
-      - Build
-    jobs:
+- stage: Deploy
+  dependsOn:
+  - Validate
+  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
+    - Initialise
+  - ${{ if in(parameters.deployType, 'LambdaService') }}:
+    - Build
+  jobs:
+  - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
-      ${{ if in(parameters.deployType, 'LambdaService') }}:
-        parameters:
-          useTerraform: ${{ parameters.useTerraform }}
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
+        ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
+  - ${{ if eq(parameters.deployType, 'ADO') }}:
+    - template: ADO/deploy.yml
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure

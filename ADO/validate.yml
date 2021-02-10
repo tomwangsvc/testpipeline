@@ -1,0 +1,33 @@
+parameters:
+- name: useTerraform
+  type: string
+  default: true
+  
+jobs:
+- job: TerraformPlan
+  displayName: Terraform Plan
+  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
+  steps:
+  - template: init.yml
+    parameters:
+      useTerraform: ${{ parameters.useTerraform }}
+
+  - task: TerraformTaskV1@0
+    displayName: Plan Terraform
+    name: TerraformPlan
+    env:
+      AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+    inputs:
+      provider: $(TF_PROVIDER)
+      command: plan
+      workingDirectory: $(TF_PATH)
+      commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
+      environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
+
+  - script: mv $(TerraformPlan.jsonPlanFilePath) $(Build.StagingDirectory)/tfplan.json
+    name: GetTFPlanJson
+    displayName: Get tfplan.json
+
+  - publish: $(Build.StagingDirectory)
+    artifact: tfplan-$(ENVIRONMENT_NAME)
+    displayName: Publish Terraform Plan
