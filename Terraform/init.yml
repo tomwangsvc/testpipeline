@@ -17,7 +17,7 @@ steps:
     - script: echo "##vso[task.setvariable variable=tfVersion;isOutput=true]$(jq -er '.terraform_version' tf-plan.json)"
       displayName: Get Terraform Version
       name: GetTFVersion
-      condition: eq(variables.System.StageName, 'Deploy')
+      condition: eq(variables['System.StageName'], 'Deploy')
       workingDirectory: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)
 
   # fallback to the pre-installed version of a different version not found above
