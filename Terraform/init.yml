@@ -1,10 +1,9 @@
 parameters:
 - name: useTerraform
   type: string
-  default: true
 
 steps:
-- ${{ if ne(parameters.useTerraform, true) }}:
+- ${{ if and(ne(parameters.useTerraform, true), ne(parameters.useTerraform, false)) }}:
   - task: TerraformInstaller@0
     displayName: Install Terraform
     inputs:

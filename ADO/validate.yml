@@ -8,7 +8,7 @@ jobs:
   displayName: Terraform Plan
   condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   steps:
-  - template: init.yml
+  - template: ../Terraform/init.yml
     parameters:
       useTerraform: ${{ parameters.useTerraform }}
 

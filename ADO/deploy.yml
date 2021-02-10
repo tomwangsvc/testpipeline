@@ -16,7 +16,7 @@ jobs:
           artifact: tfplan-$(ENVIRONMENT_NAME)
           displayName: Get tfplan
 
-        - template: init.yml
+        - template: ../Terraform/init.yml
           parameters:
             useTerraform: ${{ parameters.useTerraform }}
 
