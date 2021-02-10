@@ -56,6 +56,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
       parameters:
+        deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
 
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
@@ -98,6 +99,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
+        deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
