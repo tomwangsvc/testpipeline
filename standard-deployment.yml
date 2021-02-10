@@ -30,7 +30,7 @@ variables:
       skipDEV: true
       skipUAT: true
 
-- ${{ if or(ne(parameters.useTerraform, false), eq(parameters.deployType, 'ADO')) }}:
+- ${{ if ne(parameters.useTerraform, false) }}:
   - template: Terraform/environment.yml
     parameters:
       AWS_ACCOUNT: $(AWS_ACCOUNT)  
@@ -58,11 +58,6 @@ stages:
       parameters:
         useTerraform: ${{ parameters.useTerraform }}
 
-  - ${{ if eq(parameters.deployType, 'ADO') }}:
-    - template: ADO/validate.yml
-      parameters:
-        useTerraform: ${{ parameters.useTerraform }}
-
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
       parameters: 
@@ -72,7 +67,7 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
 
-- ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.deployType, 'ADO')) }}:
+- ${{ if ne(parameters.deployType, 'null') }}:
   - stage: Build
     ${{ if in(parameters.deployType, 'LambdaService') }}:
       # Build once, deploy anywhere
@@ -107,10 +102,6 @@ stages:
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
-  - ${{ if eq(parameters.deployType, 'ADO') }}:
-    - template: ADO/deploy.yml
-      parameters:
-        useTerraform: ${{ parameters.useTerraform }}
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure

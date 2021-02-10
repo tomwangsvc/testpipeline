@@ -1,4 +1,7 @@
 parameters:
+- name: deployType 
+  type: string
+  default: 'null'
 - name: preDeploySteps
   type: stepList
   default: []
@@ -28,6 +31,9 @@ jobs:
         - task: TerraformTaskV1@0
           displayName: Apply Terraform
           name: TerraformApply
+          ${{ if eq(parameters.deployType, 'ADO') }}:
+            env:
+              AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
           inputs:
             provider: $(TF_PROVIDER)
             command: apply
