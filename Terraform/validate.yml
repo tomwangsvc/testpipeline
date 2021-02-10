@@ -1,9 +1,16 @@
+parameters:
+- name: useTerraform
+  type: string
+  default: true
+  
 jobs:
 - job: TerraformPlan
   displayName: Terraform Plan
   condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   steps:
   - template: init.yml
+    parameters:
+      useTerraform: ${{ parameters.useTerraform }}
 
   - task: TerraformTaskV1@0
     displayName: Plan Terraform
