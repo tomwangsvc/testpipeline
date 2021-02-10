@@ -14,7 +14,12 @@ steps:
 
   # otherwise match the version from tfplan (if available)
   - ${{ if eq(parameters.useTerraform, true) }}:
-    - script: echo "##vso[task.setvariable variable=version;isOutput=true]$(jq -er '.terraform_version' tfplan.json)"
+    - script: |
+        targetVersion=$(jq -er '.terraform_version' tfplan.json)
+        currentVersion=$(terraform version)
+        if [ "$targetVersion" != "$currentVersion" ]; then
+          echo "##vso[task.setvariable variable=version;isOutput=true]${targetVersion}"
+        fi
       displayName: Get Terraform Version
       name: GetTFVersion
       condition: eq(variables['System.StageName'], 'Deploy')
