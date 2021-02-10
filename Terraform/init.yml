@@ -17,7 +17,7 @@ steps:
     - script: |
         targetVersion=$(jq -er '.terraform_version' tfplan.json)
         echo "target version: $targetVersion"
-        currentVersion=$(terraform version)
+        currentVersion=$(terraform version -json | jq -er '.terraform_version')
         echo "current version: $currentVersion"
         if [ "$targetVersion" != "$currentVersion" ]; then
           echo "setting desired Terraform version to $targetVersion"
