@@ -2,16 +2,22 @@ parameters:
 - name: defaultBranchName
   type: string
   default: 'master'
+- name: skipDEV
+  type: boolean
+  default: false
+- name: skipUAT
+  type: boolean
+  default: false
 
 variables:
-- ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(eq(parameters.skipDEV, false), ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - group: 'DEV'
 
-- ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), eq(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipDEV, true))) }}:
   - group: 'QA'
 
-- ${{ if and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'Manual')) }}:
+- ${{ if and(eq(parameters.skipUAT, false), eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'Manual')) }}:
   - group: 'UAT'
 
-- ${{ if and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), eq(variables['Build.Reason'], 'Manual')) }}:
+- ${{ if and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), or(eq(variables['Build.Reason'], 'Manual'), eq(parameters.skipUAT, true))) }}:
   - group: 'PRD'

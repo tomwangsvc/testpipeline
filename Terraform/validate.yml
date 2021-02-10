@@ -1,4 +1,7 @@
 parameters:
+- name: deployType 
+  type: string
+  default: 'null'
 - name: useTerraform
   type: string
   default: true
@@ -6,7 +9,6 @@ parameters:
 jobs:
 - job: TerraformPlan
   displayName: Terraform Plan
-  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   steps:
   - template: init.yml
     parameters:
@@ -15,6 +17,9 @@ jobs:
   - task: TerraformTaskV1@0
     displayName: Plan Terraform
     name: TerraformPlan
+    ${{ if eq(parameters.deployType, 'ADO') }}:
+      env:
+        AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
     inputs:
       provider: $(TF_PROVIDER)
       command: plan
