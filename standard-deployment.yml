@@ -55,7 +55,12 @@ stages:
       parameters:
         useTerraform: ${{ parameters.useTerraform }}
 
-  - ${{ if ne(parameters.deployType, 'null') }}:  
+  - ${{ if eq(parameters.deployType, 'ADO') }}:
+    - template: ADO/validate.yml
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
+
+  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
