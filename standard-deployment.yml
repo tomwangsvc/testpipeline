@@ -26,6 +26,9 @@ variables:
 - template: helpers/select-environment.yml
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
+    ${{ if eq(parameters.deployType, 'ADO') }}:
+      skipDEV: true
+      skipUAT: true
 
 - ${{ if or(ne(parameters.useTerraform, false), eq(parameters.deployType, 'ADO')) }}:
   - template: Terraform/environment.yml
