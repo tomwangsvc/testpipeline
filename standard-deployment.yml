@@ -67,7 +67,7 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
 
-- ${{ if ne(parameters.deployType, 'null') }}:
+- ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.deployType, 'ADO')) }}:
   - stage: Build
     ${{ if in(parameters.deployType, 'LambdaService') }}:
       # Build once, deploy anywhere
