@@ -6,7 +6,6 @@ parameters:
 jobs:
 - job: TerraformPlan
   displayName: Terraform Plan
-  condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
   steps:
   - template: ../Terraform/init.yml
     parameters:
