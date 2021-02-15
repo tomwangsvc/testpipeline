@@ -93,7 +93,7 @@ stages:
   - Validate
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
     - Initialise
-  - ${{ if in(parameters.deployType, 'LambdaService') }}:
+  - ${{ if and(in(parameters.deployType, 'LambdaService'), or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))) }}:
     - Build
   jobs:
   - ${{ if ne(parameters.useTerraform, false) }}:
