@@ -70,9 +70,6 @@ stages:
 
 - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.deployType, 'ADO')) }}:
   - stage: Build
-    ${{ if in(parameters.deployType, 'LambdaService') }}:
-      # Build once, deploy anywhere
-      condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
     dependsOn:
     - Validate
     - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
@@ -91,10 +88,9 @@ stages:
 - stage: Deploy
   dependsOn:
   - Validate
+  - Build
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
     - Initialise
-  - ${{ if and(in(parameters.deployType, 'LambdaService'), or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))) }}:
-    - Build
   jobs:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
