@@ -89,6 +89,7 @@ stages:
         - template: ${{ parameters.deployType }}/build.yml
 
 - stage: Deploy
+  condition: always()
   dependsOn:
   - Validate
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
@@ -109,8 +110,8 @@ stages:
   # Provision each environment, depending on infrastructure
   - stage: Provision
     dependsOn: 
-      - Deploy
-      - Build
+    - Deploy
+    - Build
     jobs:
     - deployment: ProvisionResources
       displayName: Provision ${{ parameters.deployType }}
