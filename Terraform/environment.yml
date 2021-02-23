@@ -4,6 +4,8 @@ parameters:
   type: string
 - name: AWS_REGION
   type: string
+- name: CICD_ROLE_NAME
+  type: string
 - name: ENVIRONMENT_NAME
   type: string
 - name: repoName
@@ -26,7 +28,7 @@ variables:
   TF_PATH: ${{ parameters.sourcesDirectory }}/terraform
   TF_VAR_AWS_ACCOUNT: ${{ parameters.AWS_ACCOUNT }}
   TF_VAR_AWS_REGION: ${{ parameters.AWS_REGION }}
-  TF_VAR_AWS_ROLE_ARN: arn:aws:iam::${{ parameters.AWS_ACCOUNT }}:role/wsl-role-ado-cicd
+  TF_VAR_AWS_ROLE_ARN: arn:aws:iam::${{ parameters.AWS_ACCOUNT }}:role/${{ parameters.CICD_ROLE_NAME }}
   TF_VAR_ENVIRONMENT: ${{ parameters.ENVIRONMENT_NAME }}
   TF_VAR_PROJECT: ${{ variables['System.TeamProject'] }}
   TF_VAR_UPDATED_BY: ${{ variables['Build.RequestedForEmail'] }}
