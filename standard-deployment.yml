@@ -35,6 +35,7 @@ variables:
     parameters:
       AWS_ACCOUNT: $(AWS_ACCOUNT)  
       AWS_REGION: $(AWS_REGION)
+      CICD_ROLE_NAME: $(CICD_ROLE_NAME)
       ENVIRONMENT_NAME: $(ENVIRONMENT_NAME)
       repoName: $(Build.Repository.Name)
       sourcesDirectory: $(Build.SourcesDirectory)
