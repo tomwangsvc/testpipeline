@@ -71,9 +71,6 @@ stages:
 
 - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.deployType, 'ADO')) }}:
   - stage: Build
-    ${{ if in(parameters.deployType, 'LambdaService') }}:
-    # Build once, deploy anywhere
-      condition: eq(variables.ENVIRONMENT_NAME, 'DEV')
     dependsOn:
     - Validate
     - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
