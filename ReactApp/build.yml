@@ -13,6 +13,10 @@ steps:
       yarn | $(Agent.OS)
       yarn
 
+- script: yarn --frozen-lockfile
+  displayName: Install Dependencies
+  condition: ne(variables.CACHE_RESTORED, 'true')
+
 - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
 
