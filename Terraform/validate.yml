@@ -34,3 +34,17 @@ jobs:
   - publish: $(Build.StagingDirectory)
     artifact: tfplan-$(ENVIRONMENT_NAME)
     displayName: Publish Terraform Plan
+
+  - script: |
+      isTerraformRequired=$(jq -er '\
+        .resource_changes |\ 
+        map(.change.actions) |\ 
+        flatten |\ 
+        map(select(. != "no-op")) |\ 
+        length |\ 
+        . > 0'\ 
+        $tfjson)
+      echo $isTerraformRequired
+    displayName: Set Terraform Condition
+    env:
+      tfjson: $(Build.StagingDirectory)/tfplan.json
