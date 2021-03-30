@@ -72,8 +72,6 @@ stages:
   - stage: Build
     dependsOn:
     - Validate
-    - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
-      - Initialise
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       # Build for each environment, depending on infrastructure
       - Deploy
@@ -88,8 +86,6 @@ stages:
 - stage: Provision
   dependsOn:
   - Validate
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
-    - Initialise
   - ${{ if in(parameters.deployType, 'LambdaService') }}:
     - Build
   jobs:
