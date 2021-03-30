@@ -41,19 +41,17 @@ variables:
       sourcesDirectory: $(Build.SourcesDirectory)
 
 stages:
-# Find the docker image for later stages
-- ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
-  - stage: Initialise
-    jobs: 
+- stage: Validate
+  jobs:
+  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    # Find the docker image for later stages
     - job: GetContainerImage
       displayName: Get Container Image
       steps:
       - template: helpers/container-get-image.yml
         parameters:
           useContainerImage: ${{ parameters.useContainerImage }}
-
-- stage: Validate
-  jobs:
+          
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
       parameters:
@@ -86,8 +84,7 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
 
-- stage: Deploy
-  condition: always()
+- stage: Provision
   dependsOn:
   - Validate
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}: 
@@ -106,13 +103,13 @@ stages:
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
   # Provision each environment, depending on infrastructure
-  - stage: Provision
+  - stage: Deploy
     dependsOn: 
-    - Deploy
+    - Provision
     - Build
     jobs:
-    - deployment: ProvisionResources
-      displayName: Provision ${{ parameters.deployType }}
+    - deployment: DeployArtifacts
+      displayName: Deploy ${{ parameters.deployType }}
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
