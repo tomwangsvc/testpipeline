@@ -27,24 +27,17 @@ jobs:
       commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
       environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
+  - script: |
+      isTerraformRequired=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
+      echo $isTerraformRequired
+    displayName: Set Terraform Condition
+    env:
+      tfjson: $(Build.StagingDirectory)/tfplan.json
+
   - script: mv $(TerraformPlan.jsonPlanFilePath) $(Build.StagingDirectory)/tfplan.json
-    name: GetTFPlanJson
+    name: StageTFPlanJson
     displayName: Get tfplan.json
 
   - publish: $(Build.StagingDirectory)
     artifact: tfplan-$(ENVIRONMENT_NAME)
     displayName: Publish Terraform Plan
-
-  - script: |
-      isTerraformRequired=$(jq -er '\
-        .resource_changes |\ 
-        map(.change.actions) |\ 
-        flatten |\ 
-        map(select(. != "no-op")) |\ 
-        length |\ 
-        . > 0'\ 
-        $tfjson)
-      echo $isTerraformRequired
-    displayName: Set Terraform Condition
-    env:
-      tfjson: $(Build.StagingDirectory)/tfplan.json
