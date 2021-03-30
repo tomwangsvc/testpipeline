@@ -14,18 +14,6 @@ parameters:
   type: stepList
 
 jobs:
-- job: Debug
-  dependsOn: ${{ parameters.dependsOn }}
-  condition: ${{ parameters.condition }}
-  variables:
-    taskDepends: $[ dependencies.GetContainerImage.outputs['GetImage.url'] ]
-    stageDepends: $[ stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'] ]
-    CONTAINER_IMAGE: $[ coalesce(dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
-  steps:
-  - script: echo $(taskDepends)
-  - script: echo $(stageDepends)
-  - script: echo $(CONTAINER_IMAGE)
-
 - job: ${{ parameters.job }}
   ${{ if ne(parameters.displayName, '') }}:
     displayName: ${{ parameters.displayName }}
@@ -37,7 +25,7 @@ jobs:
     condition: ${{ parameters.condition }}
 
   variables:
-    CONTAINER_IMAGE: coalesce($[dependencies.GetContainerImage.outputs['GetImage.url']], $[stageDependencies.Validate.GetContainerImage.outputs['GetImage.url']], '')
+    CONTAINER_IMAGE: $[ coalesce(dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
   container: 
     image: $(CONTAINER_IMAGE)
     env:
