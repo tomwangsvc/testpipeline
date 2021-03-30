@@ -32,7 +32,7 @@ jobs:
       echo $isTerraformRequired
     displayName: Set Terraform Condition
     env:
-      tfjson: $(Build.StagingDirectory)/tfplan.json
+      tfjson: $(TerraformPlan.jsonPlanFilePath)
 
   - script: mv $(TerraformPlan.jsonPlanFilePath) $(Build.StagingDirectory)/tfplan.json
     name: StageTFPlanJson
