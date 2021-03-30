@@ -11,6 +11,10 @@ parameters:
 
 jobs:
 - deployment: Terraform
+  dependsOn: Validate
+  variables:
+    IS_REQUIRED: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
+  condition: ne(variables.IS_REQUIRED, 'false')
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:
