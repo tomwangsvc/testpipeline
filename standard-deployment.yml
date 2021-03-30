@@ -73,7 +73,7 @@ stages:
     dependsOn:
     - Validate
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
-      # Build for each environment, depending on infrastructure
+      # Build for each environment; variables set from provisioned infrastructure
       - Provision
     jobs:
     - template: helpers/container-job.yml
@@ -87,6 +87,7 @@ stages:
   dependsOn:
   - Validate
   - ${{ if in(parameters.deployType, 'LambdaService') }}:
+    # Built artifacts will be included with provisioned infrastructure
     - Build
   jobs:
   - ${{ if ne(parameters.useTerraform, false) }}:
@@ -99,7 +100,7 @@ stages:
           - template: ${{ parameters.deployType }}/deploy.yml
 
 - ${{ if in(parameters.deployType, 'ReactApp') }}:
-  # Provision each environment, depending on infrastructure
+  # Deploy built code to provisioned infrastructure
   - stage: Deploy
     dependsOn: 
     - Provision
