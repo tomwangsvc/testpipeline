@@ -91,7 +91,7 @@ stages:
     - Build
   variables:
     IS_REQUIRED: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
-  condition: ne(variables.IS_REQUIRED, 'false')
+  condition: and(succeeded(), ne(variables['IS_REQUIRED'], 'false'))
   jobs:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
