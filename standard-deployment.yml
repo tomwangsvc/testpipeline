@@ -63,6 +63,7 @@ stages:
       parameters: 
         job: ValidateSources
         displayName: Validate Source Code
+        dependsOn: GetContainerImage
         condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
