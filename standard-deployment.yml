@@ -89,6 +89,9 @@ stages:
   - ${{ if in(parameters.deployType, 'LambdaService') }}:
     # Built artifacts will be included with provisioned infrastructure
     - Build
+  variables:
+    IS_REQUIRED: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
+  condition: ne(variables.IS_REQUIRED, 'false')
   jobs:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
