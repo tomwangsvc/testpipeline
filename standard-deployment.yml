@@ -58,11 +58,11 @@ stages:
           
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
-        parameters:
-          useTFOutputs: ${{ parameters.useTFOutputs }}
-          ${{ if eq(parameters.deployType, 'ADO') }}:
-            env:
-              AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+      parameters:
+        useTFOutputs: ${{ parameters.useTFOutputs }}
+        ${{ if eq(parameters.deployType, 'ADO') }}:
+          env:
+            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
