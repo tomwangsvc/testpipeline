@@ -1,24 +1,21 @@
 parameters:
-- name: deployType 
-  type: string
-  default: 'null'
-- name: useTerraform
-  type: string
-  default: true
+- name: env
+  type: object
+  default: ''
+- name: useTFOutputs
+  type: boolean
   
 jobs:
 - job: Terraform
   steps:
   - template: init.yml
     parameters:
-      useTerraform: ${{ parameters.useTerraform }}
+      useTerraform: true
 
   - task: TerraformTaskV1@0
     displayName: Plan
     name: TerraformPlan
-    ${{ if eq(parameters.deployType, 'ADO') }}:
-      env:
-        AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+    env: ${{ parameters.env }}
     inputs:
       provider: $(TF_PROVIDER)
       command: plan
@@ -26,7 +23,7 @@ jobs:
       commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
       environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-  - ${{ if ne(parameters.deployType, 'ReactApp') }}:
+  - ${{ if eq(parameters.useTFOutputs, 'false') }}:
   # Allow Terraform Apply to be skipped if there are no changes
     - script: |
         isTerraformRequired=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)

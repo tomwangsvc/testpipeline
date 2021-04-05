@@ -21,6 +21,10 @@ parameters:
 - name: useTerraform
   type: string
   default: true
+# make Terraform outputs available to the BuildSources job
+- name: useTFOutputs
+  type: boolean
+  default: false
 
 variables:
 - template: helpers/select-environment.yml
@@ -54,9 +58,11 @@ stages:
           
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
-      parameters:
-        deployType: ${{ parameters.deployType }}
-        useTerraform: ${{ parameters.useTerraform }}
+        parameters:
+          useTFOutputs: ${{ parameters.useTFOutputs }}
+          ${{ if eq(parameters.deployType, 'ADO') }}:
+            env:
+              AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
@@ -74,14 +80,15 @@ stages:
   variables:
     HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
   jobs:
-  - template: helpers/container-job.yml
-    parameters: 
-      job: BuildSources
-      displayName: Build ${{ parameters.deployType }}
-      ${{ if in(parameters.deployType, 'ReactApp') }}:
-        dependsOn: Terraform
-      steps:
-      - template: ${{ parameters.deployType }}/build.yml 
+  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    - template: helpers/container-job.yml
+      parameters: 
+        job: BuildSources
+        displayName: Build ${{ parameters.deployType }}
+        ${{ if eq(parameters.useTFOutputs, 'true') }}:
+          dependsOn: Terraform
+        steps:
+        - template: ${{ parameters.deployType }}/build.yml 
 
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
