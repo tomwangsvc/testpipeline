@@ -7,15 +7,14 @@ parameters:
   default: true
   
 jobs:
-- job: TerraformPlan
-  displayName: Terraform Plan
+- job: Terraform
   steps:
   - template: init.yml
     parameters:
       useTerraform: ${{ parameters.useTerraform }}
 
   - task: TerraformTaskV1@0
-    displayName: Plan Terraform
+    displayName: Plan
     name: TerraformPlan
     ${{ if eq(parameters.deployType, 'ADO') }}:
       env:
@@ -43,4 +42,4 @@ jobs:
 
   - publish: $(Build.StagingDirectory)
     artifact: tfplan-$(ENVIRONMENT_NAME)
-    displayName: Publish Terraform Plan
+    displayName: Publish Plan

@@ -35,7 +35,7 @@ jobs:
             useTerraform: ${{ parameters.useTerraform }}
 
         - task: TerraformTaskV1@0
-          displayName: Apply Terraform
+          displayName: Apply
           name: TerraformApply
           ${{ if eq(parameters.deployType, 'ADO') }}:
             env:
@@ -49,8 +49,8 @@ jobs:
 
         - script: mv $(TerraformApply.jsonOutputVariablesPath) $(Build.StagingDirectory)/tfoutput.json
           name: GetTFOutputFileName
-          displayName: Get Terraform Output
+          displayName: Get Outputs
 
         - publish: $(Build.StagingDirectory)
           artifact: tfoutput-$(ENVIRONMENT_NAME)
-          displayName: Publish Terraform Output
+          displayName: Publish Outputs
