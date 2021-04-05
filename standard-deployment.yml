@@ -85,7 +85,7 @@ stages:
       parameters: 
         job: BuildSources
         displayName: Build ${{ parameters.deployType }}
-        ${{ if eq(parameters.useTFOutputs, 'true') }}:
+        ${{ if eq(parameters.useTFOutputs, true) }}:
           dependsOn: Terraform
         steps:
         - template: ${{ parameters.deployType }}/build.yml
@@ -95,7 +95,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), ne(variables['HAS_TERRAFORM_APPLY'], 'false'))
+        condition: and(succeeded(), ne(variables['HAS_TERRAFORM_APPLY'], false))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:

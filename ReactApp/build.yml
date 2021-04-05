@@ -3,7 +3,7 @@ parameters:
   type: boolean
 
 steps:
-- ${{ if eq(parameters.useTFOutputs, 'true') }}:
+- ${{ if eq(parameters.useTFOutputs, true) }}:
   - download: current
     artifact: tfoutput-$(ENVIRONMENT_NAME)
     displayName: Get Terraform Outputs

@@ -24,7 +24,7 @@ jobs:
       commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
       environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-  - ${{ if eq(parameters.useTFOutputs, 'false') }}:
+  - ${{ if eq(parameters.useTFOutputs, false) }}:
   # Allow Terraform Apply to be skipped if there are no changes
     - script: |
         isTerraformRequired=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
