@@ -78,7 +78,7 @@ stages:
   dependsOn:
     - Validate
   variables:
-    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
+    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
   jobs:
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
     - template: helpers/container-job.yml
