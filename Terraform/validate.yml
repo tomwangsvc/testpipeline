@@ -15,7 +15,8 @@ jobs:
   - task: TerraformTaskV1@0
     displayName: Plan
     name: TerraformPlan
-    env: ${{ parameters.env }}
+    ${{ if ne(parameters.env, '') }}:
+      env: ${{ parameters.env }}
     inputs:
       provider: $(TF_PROVIDER)
       command: plan
