@@ -47,15 +47,6 @@ variables:
 stages:
 - stage: Validate
   jobs:
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
-    # Find the docker image for later stages
-    - job: GetContainerImage
-      displayName: Get Container Image
-      steps:
-      - template: helpers/container-get-image.yml
-        parameters:
-          useContainerImage: ${{ parameters.useContainerImage }}
-          
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
       parameters:
@@ -64,11 +55,20 @@ stages:
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
+  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    # Identify the docker image for later stages
+    - job: GetContainerImage
+      displayName: Container Image
+      steps:
+      - template: helpers/container-get-image.yml
+        parameters:
+          useContainerImage: ${{ parameters.useContainerImage }}
+
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
-        displayName: Validate Source Code
+        displayName: Source Code
         dependsOn: GetContainerImage
         condition: or(eq(variables.ENVIRONMENT_NAME, 'DEV'), eq(variables.ENVIRONMENT_NAME, 'QA'))
         steps:
@@ -88,7 +88,9 @@ stages:
         ${{ if eq(parameters.useTFOutputs, 'true') }}:
           dependsOn: Terraform
         steps:
-        - template: ${{ parameters.deployType }}/build.yml 
+        - template: ${{ parameters.deployType }}/build.yml
+          parameters:
+            useTFOutputs: ${{ parameters.useTFOutputs }} 
 
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml

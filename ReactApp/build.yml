@@ -1,7 +1,12 @@
+parameters:
+- name: useTFOutputs
+  type: boolean
+
 steps:
-- download: current
-  artifact: tfoutput-$(ENVIRONMENT_NAME)
-  displayName: Get Terraform Outputs
+${{ if eq(parameters.useTFOutputs, 'true') }}:
+  - download: current
+    artifact: tfoutput-$(ENVIRONMENT_NAME)
+    displayName: Get Terraform Outputs
 
 - task: Cache@2
   displayName: Check Dependency Cache
