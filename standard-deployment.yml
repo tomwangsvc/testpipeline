@@ -108,6 +108,7 @@ stages:
       dependsOn: 
         - BuildSources
         - Terraform
+      condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables['HAS_TERRAFORM_APPLY'], false)))
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
