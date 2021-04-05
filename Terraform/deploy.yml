@@ -1,4 +1,7 @@
 parameters:
+- name: condition
+  type: string
+  default: succeeded()
 - name: deployType 
   type: string
   default: 'null'
@@ -11,6 +14,7 @@ parameters:
 
 jobs:
 - deployment: Terraform
+  condition: ${{ parameters.condition }}
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:
