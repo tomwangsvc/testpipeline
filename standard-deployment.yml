@@ -21,7 +21,7 @@ parameters:
 - name: useTerraform
   type: string
   default: true
-# make Terraform outputs available to the BuildSources job
+# make Terraform outputs available to the BuildSources and DeployArtifacts jobs
 - name: useTFOutputs
   type: boolean
   default: false
@@ -114,4 +114,6 @@ stages:
         runOnce:
           deploy:  
             steps:
-            - template: ${{ parameters.deployType }}/deploy.yml                  
+            - template: ${{ parameters.deployType }}/deploy.yml
+              parameters:
+                useTFOutputs: ${{ parameters.useTFOutputs }}                   
