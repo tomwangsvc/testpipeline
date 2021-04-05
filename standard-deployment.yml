@@ -97,7 +97,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), or(eq(variables.FORCE_TERRAFORM_APPLY, true), ne(variables['HAS_TERRAFORM_APPLY'], false))
+        condition: and(succeeded(), or(eq(variables.FORCE_TERRAFORM_APPLY, true), ne(variables['HAS_TERRAFORM_APPLY'], false)))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
