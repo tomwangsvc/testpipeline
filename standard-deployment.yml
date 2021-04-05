@@ -79,6 +79,8 @@ stages:
     - Validate
   variables:
     HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
+    ${{ if in(parameters.deployType, 'ReactApp') }}:
+      FORCE_TERRAFORM_APPLY: true 
   jobs:
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
     - template: helpers/container-job.yml
@@ -95,7 +97,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), ne(variables['HAS_TERRAFORM_APPLY'], false))
+        condition: and(succeeded(), or(eq(variables.FORCE_TERRAFORM_APPLY, true), ne(variables['HAS_TERRAFORM_APPLY'], false))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
