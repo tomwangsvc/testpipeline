@@ -68,49 +68,37 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
 
-- ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.deployType, 'ADO')) }}:
-  - stage: Build
-    dependsOn:
-    - Validate
-    - ${{ if in(parameters.deployType, 'ReactApp') }}:
-      # Build for each environment; variables set from provisioned infrastructure
-      - Provision
-    jobs:
-    - template: helpers/container-job.yml
-      parameters: 
-        job: BuildSources
-        displayName: Build ${{ parameters.deployType }}
-        steps:
-        - template: ${{ parameters.deployType }}/build.yml
-
-- stage: Provision
+- stage: Deploy
   dependsOn:
-  - Validate
-  - ${{ if in(parameters.deployType, 'LambdaService') }}:
-    # Built artifacts will be included with provisioned infrastructure
-    - Build
+    - Validate
   variables:
-    IS_REQUIRED: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
-  condition: and(succeeded(), ne(variables['IS_REQUIRED'], 'false'))
+    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.TerraformPlan.outputs['TerraformCondition.isRequired'] ]
   jobs:
+  - template: helpers/container-job.yml
+    parameters: 
+      job: BuildSources
+      displayName: Build ${{ parameters.deployType }}
+      ${{ if in(parameters.deployType, 'ReactApp') }}:
+        dependsOn: Terraform
+      steps:
+      - template: ${{ parameters.deployType }}/build.yml 
+
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
+        condition: and(succeeded(), ne(variables['HAS_TERRAFORM_APPLY'], 'false'))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
 
-- ${{ if in(parameters.deployType, 'ReactApp') }}:
-  # Deploy built code to provisioned infrastructure
-  - stage: Deploy
-    dependsOn: 
-    - Provision
-    - Build
-    jobs:
+  - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
       displayName: Deploy ${{ parameters.deployType }}
+      dependsOn: 
+        - BuildSources
+        - Terraform
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
