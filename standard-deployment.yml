@@ -23,6 +23,7 @@ parameters:
   default: true
 
 variables:
+  DEPLOY_TYPE: ${{ parameters.deployType }}
 - template: helpers/select-environment.yml
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
@@ -86,7 +87,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), or(ne(variables['HAS_TERRAFORM_APPLY'], 'false'), in(parameters.deployType, 'ReactApp')))
+        condition: and(succeeded(), or(ne(variables['HAS_TERRAFORM_APPLY'], 'false'), in(variables['DEPLOY_TYPE'], 'ReactApp')))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
