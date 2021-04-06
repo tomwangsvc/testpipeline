@@ -132,7 +132,7 @@ stages:
           - checkout: none
           - script: |
               gql='mutation($input: CreateVersionInput!){ createVersion(input: $input){ createdAt } }'
-              payload=$(jq -nc \
+              payload=$(jq -ernc \
                 --arg gql "$gql" \
                 --arg buildId "$BUILD_BUILDID" \
                 --arg buildReason "$BUILD_REASON" \
@@ -154,7 +154,7 @@ stages:
                       isScheduled: $isScheduled,
                       pipelineName: $pipelineName,
                       projectName: $projectName,
-                      sourceBranch: $sourceBranch,
+                      sourceBranch: $sourceBranch
                       versionNumber: $VersionNumber
                     }
                   }
