@@ -162,5 +162,5 @@ stages:
               id: $(Build.BuildId)
               ProjectRepoName: 'DevOps/version-app-poc'
               VersionNumber: $(Build.BuildId)   
-          - script: echo Payload.output
+          - script: echo $(Payload.output)
             displayName: Print Payload       
