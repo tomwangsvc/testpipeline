@@ -78,7 +78,7 @@ stages:
   dependsOn:
     - Validate
   variables:
-    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs.TerraformCondition.isRequired ]
+    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
     ${{ if in(parameters.deployType, 'ReactApp') }}:
       FORCE_TERRAFORM_APPLY: true 
   jobs:
