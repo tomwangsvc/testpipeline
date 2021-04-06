@@ -118,4 +118,49 @@ stages:
             steps:
             - template: ${{ parameters.deployType }}/deploy.yml
               parameters:
-                useTFOutputs: ${{ parameters.useTFOutputs }}                   
+                useTFOutputs: ${{ parameters.useTFOutputs }}
+
+- stage: Update
+  jobs:
+  - deployment: NotifyClients
+    displayName: Notify Clients
+    environment: $(ENVIRONMENT_NAME)
+      strategy:
+        runOnce:
+          deploy:  
+            steps:
+            - checkout: none
+            - script: |
+                gql='mutation($createversioninput: CreateVersionInput!){
+                  createVersion(input: $createversioninput){
+                    id
+                    appName
+                    versionNumber
+                    updatedAt
+                    createdAt 
+                  } 
+                }'
+                payload=$(jq -n \
+                  --arg gql "$gql" \
+                  --arg id "$id" \
+                  --arg ProjectRepoName "$ProjectRepoName" \
+                  --arg VersionNumber "$VersionNumber" \
+                  '{
+                    query: $gql, 
+                    variables: {
+                      createversioninput: {
+                        id: $id,
+                        appName: $ProjectRepoName, 
+                        versionNumber: $VersionNumber
+                      }
+                    }
+                  }')
+                echo "##vso[task.setvariable variable=output;isOutput=true]${payload}"
+              name: Payload
+              displayName: Generate Payload
+              env:
+                id: $(Build.BuildId)
+                ProjectRepoName: 'DevOps/version-app-poc'
+                VersionNumber: $(Build.BuildId)   
+            - script: echo Payload.output
+              displayName: Print Payload       
