@@ -162,11 +162,7 @@ stages:
               awsCredentials: $(AWS_SERVICE_CONNECTOR)
               regionName: $(AWS_REGION)
               functionName: 'testCICDUpdate'
-              payload: |
-                {
-                  "key1": "value1",
-                  "key2": "value2"
-                }       
+              payload: $(Payload.output)
               outputVariable: 'updateResult'
           - script: echo $(Mutate.updateResult)
             displayName: Print Result
