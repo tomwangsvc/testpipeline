@@ -161,9 +161,8 @@ stages:
             inputs:
               awsCredentials: $(AWS_SERVICE_CONNECTOR)
               regionName: $(AWS_REGION)
-              functionName: 'testCICDUpdate'
+              functionName: testCICDUpdate
               payload: $(Payload.output)
-              invocationType: 'Event'
-              outputVariable: 'result'
-          - script: echo $(UpdateAPI.result)
+              outputVariable: updateResult
+          - script: echo $(updateResult)
             displayName: Print Result
