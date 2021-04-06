@@ -147,7 +147,6 @@ stages:
                     }
                   }
                 }')
-              echo $payload
               echo "##vso[task.setvariable variable=output;isOutput=true]${payload}"
             name: Payload
             displayName: Generate Payload
