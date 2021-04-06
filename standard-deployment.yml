@@ -146,7 +146,7 @@ stages:
                       versionNumber: $VersionNumber
                     }
                   }
-                }') | tr -d ' '
+                }')
               echo $payload
               echo "##vso[task.setvariable variable=output;isOutput=true]${payload}"
             name: Payload
