@@ -163,6 +163,7 @@ stages:
               regionName: $(AWS_REGION)
               functionName: 'testCICDUpdate'
               payload: $(Payload.output)
+              invocationType: 'Event'
               outputVariable: 'updateResult'
           - script: echo $(Mutate.updateResult)
             displayName: Print Result
