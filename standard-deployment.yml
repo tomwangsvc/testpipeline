@@ -130,6 +130,7 @@ stages:
         deploy:  
           steps:
           - checkout: none
+          - script: printenv
           - script: |
               gql='mutation($input: CreateVersionInput!){ createVersion(input: $input){ createdAt } }'
               payload=$(jq -nc \
