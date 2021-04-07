@@ -4,6 +4,9 @@ parameters:
 - name: displayName
   type: string
   default: ''
+- name: dependsOn
+  type: object
+  default: ''
 - name: condition
   type: string
   default: ''
@@ -15,11 +18,14 @@ jobs:
   ${{ if ne(parameters.displayName, '') }}:
     displayName: ${{ parameters.displayName }}
 
+  ${{ if ne(parameters.dependsOn, '') }}:
+    dependsOn: ${{ parameters.dependsOn }}
+
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
 
   variables:
-    CONTAINER_IMAGE: $[ stageDependencies.Initialise.GetContainerImage.outputs['GetImage.url'] ]
+    CONTAINER_IMAGE: $[ coalesce(dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
   container: 
     image: $(CONTAINER_IMAGE)
     env:

@@ -7,7 +7,7 @@ steps:
   # get the version from the useTerraform param if set
   - ${{ if ne(parameters.useTerraform, true) }}:
     - script: echo "##vso[task.setvariable variable=version;isOutput=true]${TF_VERSION}"
-      displayName: Get Terraform Version
+      displayName: Get Version
       name: GetTFVersion
       env: 
         TF_VERSION: ${{ parameters.useTerraform }}
@@ -23,20 +23,20 @@ steps:
           echo "setting desired Terraform version to $targetVersion"
           echo "##vso[task.setvariable variable=version;isOutput=true]${targetVersion}"
         fi
-      displayName: Get Terraform Version
+      displayName: Get Version
       name: GetTFVersion
       condition: eq(variables['System.StageName'], 'Deploy')
       workingDirectory: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)
 
   # fallback to the pre-installed version if a different version not found above
   - task: TerraformInstaller@0
-    displayName: Install Terraform
+    displayName: Install 
     condition: ne(variables['GetTFVersion.version'], '')
     inputs:
       terraformVersion: $(GetTFVersion.version)
 
 - task: TerraformTaskV1@0
-  displayName: Initialise Terraform
+  displayName: Init
   inputs:
     provider: $(TF_PROVIDER)
     command: init
