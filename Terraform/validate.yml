@@ -2,6 +2,9 @@ parameters:
 - name: env
   type: object
   default: ''
+- name: useTerraform
+  type: string
+  default: true
 - name: useTFOutputs
   type: boolean
   
@@ -10,7 +13,7 @@ jobs:
   steps:
   - template: init.yml
     parameters:
-      useTerraform: true
+      useTerraform: ${{ parameters.useTerraform }}
 
   - task: TerraformTaskV1@0
     displayName: Plan
