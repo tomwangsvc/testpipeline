@@ -164,13 +164,14 @@ stages:
             displayName: Generate Payload
             env:
               VersionNumber: $(Build.BuildNumber) #TODO: replace with semantic version number
-          - task: LambdaInvokeFunction@1
-            name: UpdateAPI
-            inputs:
-              awsCredentials: $(AWS_SERVICE_CONNECTOR)
-              regionName: $(AWS_REGION)
-              functionName: testCICDUpdate
-              payload: $(Payload.output)
-              outputVariable: updateResult
-          - script: echo $(updateResult)
-            displayName: Print Result
+          ## TODO: implement Release Update Service and invoke Mutate Lambda
+          # - task: LambdaInvokeFunction@1
+          #   name: UpdateAPI
+          #   inputs:
+          #     awsCredentials: $(AWS_SERVICE_CONNECTOR)
+          #     regionName: $(AWS_REGION)
+          #     functionName: testCICDUpdate
+          #     payload: $(Payload.output)
+          #     outputVariable: updateResult
+          # - script: echo $(updateResult)
+          #   displayName: Print Result
