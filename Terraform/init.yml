@@ -25,13 +25,13 @@ steps:
         fi
       displayName: Get Version
       name: GetTFVersion
-      condition: eq(variables.System.StageName, 'Deploy')
+      condition: eq(variables['System.StageName'], 'Deploy')
       workingDirectory: $(Pipeline.Workspace)/tfplan-$(ENVIRONMENT_NAME)
 
   # fallback to the pre-installed version if a different version not found above
   - task: TerraformInstaller@0
     displayName: Install 
-    condition: ne(variables.GetTFVersion.version, '')
+    condition: ne(variables['GetTFVersion.version'], '')
     inputs:
       terraformVersion: $(GetTFVersion.version)
 
