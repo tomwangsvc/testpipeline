@@ -92,7 +92,7 @@ stages:
       displayName: Get Terraform Outputs
       dependsOn: Terraform
       steps:
-      - template: init.yml
+      - template: Terraform/init.yml
         parameters:
           useTerraform: ${{ parameters.useTerraform }}
       - ${{ each output in parameters.terraformOutputEnv }}:
