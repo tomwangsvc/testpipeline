@@ -96,7 +96,7 @@ stages:
           dependsOn: Terraform
         steps:
         - ${{ each output in parameters.terraformOutputEnv }}:
-          - script: echo ${{ output.Value }}
+          - script: terraform output -raw ${{ output.Value }}
             displayName: ${{ output.Key }}
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
