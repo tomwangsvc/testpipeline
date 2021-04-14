@@ -95,6 +95,9 @@ stages:
         ${{ if eq(parameters.useTFOutputs, true) }}:
           dependsOn: Terraform
         steps:
+        - ${{ each output in parameters.terraformOutputEnv }}:
+          - script: echo ${{ output.Value }}
+            displayName: ${{ output.Key }}
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
             useTFOutputs: ${{ parameters.useTFOutputs }} 
