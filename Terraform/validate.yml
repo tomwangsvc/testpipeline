@@ -15,8 +15,8 @@ jobs:
       useTerraform: ${{ parameters.useTerraform }}
 
   - script: |
-      set -e
       terraform fmt -recursive -diff -check
+      echo $?
     displayName: Check Format
 
   - task: TerraformTaskV1@0
