@@ -121,7 +121,7 @@ stages:
               parameters:
                 useTFOutputs: ${{ parameters.useTFOutputs }}
 
-- stage: Update
+- stage: Accept
   jobs:
   - deployment: NotifyClients
     displayName: Notify Clients
