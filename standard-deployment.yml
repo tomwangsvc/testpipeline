@@ -11,6 +11,10 @@ parameters:
   - ADO
   - ReactApp
   - LambdaService
+# set terraform output variables to environment variables
+- name: terraformOutputEnv
+  type: object
+  default: ''
 # use a Docker container to run Validate and Build stages
 # expects a named image, otherwise uses your repo's devcontainer (default)
 - name: useContainerImage 
