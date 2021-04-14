@@ -92,6 +92,9 @@ stages:
       displayName: Get Terraform Outputs
       dependsOn: Terraform
       steps:
+      - download: current
+        artifact: tfplan-$(ENVIRONMENT_NAME)
+        displayName: Get tfplan
       - template: Terraform/init.yml
         parameters:
           useTerraform: ${{ parameters.useTerraform }}
