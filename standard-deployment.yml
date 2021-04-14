@@ -50,6 +50,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
       parameters:
+        useTerraform: ${{ parameters.useTerraform }}
         useTFOutputs: ${{ parameters.useTFOutputs }}
         ${{ if eq(parameters.deployType, 'ADO') }}:
           env:
