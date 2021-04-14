@@ -88,16 +88,20 @@ stages:
       FORCE_TERRAFORM_APPLY: true 
   jobs:
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    - job: GetTFOutput
+      displayName: Get Terraform Outputs
+      dependsOn: Terraform
+      steps:
+      - ${{ each output in parameters.terraformOutputEnv }}:
+        - script: terraform output -raw ${{ output.Value }}
+          displayName: ${{ output.Key }}
     - template: helpers/container-job.yml
       parameters: 
         job: BuildSources
         displayName: Build ${{ parameters.deployType }}
         ${{ if eq(parameters.useTFOutputs, true) }}:
-          dependsOn: Terraform
+          dependsOn: GetTFOutput
         steps:
-        - ${{ each output in parameters.terraformOutputEnv }}:
-          - script: terraform output -raw ${{ output.Value }}
-            displayName: ${{ output.Key }}
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
             useTFOutputs: ${{ parameters.useTFOutputs }} 
