@@ -16,7 +16,11 @@ jobs:
 
   - script: |
       terraform fmt -recursive -diff -check
-      echo $?
+      if [ $? -ne 0 ]
+      then
+        echo "##vso[task.logissue type=error]Format check failed. Run `terraform fmt` locally to resolve."
+        exit 1
+      fi
     displayName: Check Format
 
   - task: TerraformTaskV1@0
