@@ -16,7 +16,7 @@ jobs:
 
   - script: |
       toFormat=$(terraform fmt -check=true -list=true)
-      echo $toFormat
+      echo echo $(terraform fmt -check=true -list=true)
       if [ ! -z $toFormat ]
       then
         echo "##vso[task.logissue type=error]Format check failed. Check: ${toFormat}."
