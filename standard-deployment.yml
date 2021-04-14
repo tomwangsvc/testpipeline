@@ -92,6 +92,9 @@ stages:
       displayName: Get Terraform Outputs
       dependsOn: Terraform
       steps:
+      - template: init.yml
+        parameters:
+          useTerraform: ${{ parameters.useTerraform }}
       - ${{ each output in parameters.terraformOutputEnv }}:
         - script: terraform output -raw ${{ output.Value }}
           displayName: ${{ output.Key }}
