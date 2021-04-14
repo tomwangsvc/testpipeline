@@ -14,7 +14,13 @@ jobs:
     parameters:
       useTerraform: ${{ parameters.useTerraform }}
 
-  - script: terraform fmt -check=true
+  - script: |
+      toFormat=$(terraform fmt -check=true)
+      if [ $? -ne 0 ]
+      then
+        echo "##vso[task.logissue type=error]Format check failed. Check ${toFormat}."
+        exit 1
+      fi
     displayName: Check Format
 
   - task: TerraformTaskV1@0
