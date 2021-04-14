@@ -15,10 +15,10 @@ jobs:
       useTerraform: ${{ parameters.useTerraform }}
 
   - script: |
-      toFormat=$(terraform fmt -check=true)
-      if [ $? -ne 0 ]
+      toFormat=$(terraform fmt -check=true -list=true)
+      if [ ! -z $toFormat ]
       then
-        echo "##vso[task.logissue type=error]Format check failed. Check ${toFormat}."
+        echo "##vso[task.logissue type=error]Format check failed. Check: ${toFormat}."
         exit 1
       fi
     displayName: Check Format
