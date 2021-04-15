@@ -83,9 +83,7 @@ stages:
   dependsOn:
     - Validate
   variables:
-    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
-    ${{ if in(parameters.deployType, 'ReactApp') }}:
-      FORCE_TERRAFORM_APPLY: true
+    IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
   jobs:
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
     - template: helpers/container-job.yml
@@ -104,7 +102,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), or(eq(variables.FORCE_TERRAFORM_APPLY, true), ne(variables.HAS_TERRAFORM_APPLY, false)))
+        condition: and(succeeded(), ne(variables.IS_INFRA_CHANGE, false))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
@@ -135,7 +133,7 @@ stages:
       dependsOn: 
         - BuildSources
         - Terraform
-      condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables.HAS_TERRAFORM_APPLY, false)))
+      condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables.IS_INFRA_CHANGE, false)))
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
