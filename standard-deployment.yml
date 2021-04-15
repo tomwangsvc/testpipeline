@@ -92,6 +92,7 @@ stages:
         displayName: Build ${{ parameters.deployType }}
         ${{ if ne(parameters.terraformOutputEnv, '') }}:
           dependsOn: GetTFOutput
+          condition: succeeded('GetTFOutput')
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
