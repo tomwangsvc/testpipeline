@@ -1,6 +1,7 @@
 parameters:
-- name: useTFOutputs
-  type: boolean
+- name: env
+  type: object
+  default: ''
 
 steps:
 - ${{ if eq(parameters.useTFOutputs, true) }}:
@@ -23,8 +24,11 @@ steps:
   displayName: Install Dependencies
   condition: ne(variables.CACHE_RESTORED, 'true')
 
-- script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
+- script: printenv
+# ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
+  ${{ if ne(parameters.env, '') }}:
+    env: ${{ parameters.env }} 
 
 - publish: $(System.DefaultWorkingDirectory)/build/
   artifact: react-app-$(ENVIRONMENT_NAME)

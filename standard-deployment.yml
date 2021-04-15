@@ -114,7 +114,9 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
-            useTFOutputs: ${{ parameters.useTFOutputs }} 
+            env: 
+              ${{ each output in parameters.terraformOutputEnv }}:
+                ${{ output.Key }}: ${{ output.Value }}   
 
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
