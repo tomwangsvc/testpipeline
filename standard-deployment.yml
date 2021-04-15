@@ -97,7 +97,7 @@ stages:
           parameters:
             env: 
               ${{ each output in parameters.terraformOutputEnv }}:
-                ${{ output.Key }}: ${{ output.Value }}   
+                ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]   
 
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
@@ -124,6 +124,7 @@ stages:
         - script: |
             value=$(terraform output -raw ${{ output.Value }})
             echo "##vso[task.setvariable variable=value;isOutput=true]${value}"
+          displayName: Get ${{ output.Value }})
           name: ${{ output.Key }}
           workingDirectory: terraform
 
