@@ -29,8 +29,9 @@ jobs:
 
   variables:
     CONTAINER_IMAGE: $[ coalesce(dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
-    ${{ each var in parameters.variables }}:
-      ${{ var.Key }}: ${{ var.Value }}
+    ${{ if ne(parameters.variables, '') }}:
+      ${{ each var in parameters.variables }}:
+        ${{ var.Key }}: ${{ var.Value }}
   container: 
     image: $(CONTAINER_IMAGE)
     env:
