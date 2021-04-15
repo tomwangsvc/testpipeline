@@ -98,8 +98,8 @@ stages:
       - template: Terraform/init.yml
         parameters:
           useTerraform: ${{ parameters.useTerraform }}
-      # - script: terraform refresh
-      #   displayName: Refresh State
+      - script: terraform refresh
+        displayName: Refresh State
       - ${{ each output in parameters.terraformOutputEnv }}:
         - script: terraform output -raw ${{ output.Value }}
           displayName: ${{ output.Key }}
