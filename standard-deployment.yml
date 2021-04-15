@@ -93,12 +93,11 @@ stages:
         ${{ if ne(parameters.terraformOutputEnv, '') }}:
           dependsOn: GetTFOutput
           condition: succeeded('GetTFOutput')
+        variables:
+          ${{ each output in parameters.terraformOutputEnv }}:
+            ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
         steps:
-        - template: ${{ parameters.deployType }}/build.yml
-          parameters:
-            env: 
-              ${{ each output in parameters.terraformOutputEnv }}:
-                ${{ output.Key }}: $(dependencies.GetTFOutput.outputs['${{ output.Key }}.value'])  
+        - template: ${{ parameters.deployType }}/build.yml        
 
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
