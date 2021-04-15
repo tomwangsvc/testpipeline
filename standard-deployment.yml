@@ -85,31 +85,14 @@ stages:
   variables:
     HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
     ${{ if in(parameters.deployType, 'ReactApp') }}:
-      FORCE_TERRAFORM_APPLY: true 
+      FORCE_TERRAFORM_APPLY: true
   jobs:
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
-    - job: GetTFOutput
-      displayName: Get Terraform Outputs
-      dependsOn: Terraform
-      steps:
-      - download: current
-        artifact: tfplan-$(ENVIRONMENT_NAME)
-        displayName: Get tfplan
-      - template: Terraform/init.yml
-        parameters:
-          useTerraform: ${{ parameters.useTerraform }}
-      - ${{ each output in parameters.terraformOutputEnv }}:
-        - script: |
-            value=$(terraform output -raw ${{ output.Value }})
-            echo "##vso[task.setvariable variable=value;isOutput=true]${value}"
-          name: ${{ output.Key }}
-          workingDirectory: terraform
-        - script: echo $(${{ output.Key }}.value)
     - template: helpers/container-job.yml
       parameters: 
         job: BuildSources
         displayName: Build ${{ parameters.deployType }}
-        ${{ if eq(parameters.useTFOutputs, true) }}:
+        ${{ if ne(parameters.terraformOutputEnv, '') }}:
           dependsOn: GetTFOutput
         steps:
         - template: ${{ parameters.deployType }}/build.yml
@@ -127,6 +110,24 @@ stages:
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
+
+  - ${{ if ne(parameters.terraformOutputEnv, '') }}:
+    - job: GetTFOutput
+      displayName: Get Terraform Outputs
+      dependsOn: Terraform
+      steps:
+      - download: current
+        artifact: tfplan-$(ENVIRONMENT_NAME)
+        displayName: Get tfplan
+      - template: Terraform/init.yml
+        parameters:
+          useTerraform: ${{ parameters.useTerraform }}
+      - ${{ each output in parameters.terraformOutputEnv }}:
+        - script: |
+            value=$(terraform output -raw ${{ output.Value }})
+            echo "##vso[task.setvariable variable=value;isOutput=true]${value}"
+          name: ${{ output.Key }}
+          workingDirectory: terraform
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
