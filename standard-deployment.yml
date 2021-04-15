@@ -100,9 +100,11 @@ stages:
           useTerraform: ${{ parameters.useTerraform }}
       - script: terraform refresh
         displayName: Refresh State
+        workingDirectory: terraform
       - ${{ each output in parameters.terraformOutputEnv }}:
         - script: terraform output -raw ${{ output.Value }}
           displayName: ${{ output.Key }}
+          workingDirectory: terraform
     - template: helpers/container-job.yml
       parameters: 
         job: BuildSources
