@@ -98,7 +98,7 @@ stages:
           parameters:
             env: 
               ${{ each output in parameters.terraformOutputEnv }}:
-                ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]   
+                ${{ output.Key }}: $(dependencies.GetTFOutput.outputs['${{ output.Key }}.value'])  
 
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
