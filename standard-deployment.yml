@@ -112,7 +112,6 @@ stages:
   - ${{ if ne(parameters.terraformOutputEnv, '') }}:
     - job: GetTFOutput
       displayName: Get Terraform Outputs
-      dependsOn: Terraform
       condition: succeededOrFailed('Terraform')
       steps:
       - download: current
