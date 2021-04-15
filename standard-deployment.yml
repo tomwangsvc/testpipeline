@@ -105,7 +105,7 @@ stages:
         - script: echo "##vso[task.setvariable variable=value;isOutput=true]terraform output -raw ${{ output.Value }}"
           displayName: ${{ output.Key }}
           workingDirectory: terraform
-      - script: printenv
+        - script: echo $(${{ output.Key }}.value)
     - template: helpers/container-job.yml
       parameters: 
         job: BuildSources
