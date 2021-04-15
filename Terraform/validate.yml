@@ -40,7 +40,7 @@ jobs:
       isInfraChange=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
       echo "##vso[task.setvariable variable=isRequired;isOutput=true]${isInfraChange}"
     name: TerraformCondition
-    displayName: Apply Condition
+    displayName: Requires Change?
     env:
       tfjson: $(TerraformPlan.jsonPlanFilePath)
 
