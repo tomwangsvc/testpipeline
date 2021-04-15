@@ -132,8 +132,12 @@ stages:
       dependsOn: 
         - BuildSources
         - Terraform
+        - GetTFOutput
       condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables.IS_INFRA_CHANGE, false)))
       environment: $(ENVIRONMENT_NAME)
+      variables:
+        ${{ each output in parameters.terraformOutputEnv }}:
+          ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
       strategy:
         runOnce:
           deploy:  

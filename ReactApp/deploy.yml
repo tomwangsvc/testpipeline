@@ -1,3 +1,5 @@
+# Deploy ReactApp to AWS S3 bucket
+# Expects S3_BUCKET_NAME to be set in the environment
 steps:
 - checkout: none
 
@@ -5,26 +7,15 @@ steps:
   artifact: react-app-$(ENVIRONMENT_NAME)
   displayName: Get App Build
 
-- download: current
-  artifact: tfoutput-$(ENVIRONMENT_NAME)
-  displayName: Get Terraform Outputs
-
-- script: |
-    websiteBucket=$(jq -er '.website_bucket.value | select (.!=null)' \
-    $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)/tfoutput.json)
-    echo "##vso[task.setvariable variable=value;isOutput=true]${websiteBucket}"
-  name: GetWebsiteBucket
-  displayName: Get Website Bucket
+- script: printenv
 
 - task: AWSShellScript@1
   displayName: Sync S3 Bucket
-  env:
-    websiteBucket: $(GetWebsiteBucket.value)
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: $(AWS_REGION)
     scriptType: inline
-    inlineScript: 'aws s3 sync . s3://${websiteBucket} --delete --acl public-read'
+    inlineScript: 'aws s3 sync . s3://${S3_BUCKET_NAME} --delete --acl public-read'
     disableAutoCwd: true
     workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
     failOnStandardError: true
