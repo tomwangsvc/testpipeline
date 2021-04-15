@@ -4,11 +4,11 @@ parameters:
   default: ''
 
 steps:
-- ${{ if eq(parameters.useTFOutputs, true) }}:
-  - download: current
-    artifact: tfoutput-$(ENVIRONMENT_NAME)
-    displayName: Get Terraform Outputs
-  ## TODO: make TF Outputs consumable by npm build
+# - ${{ if eq(parameters.useTFOutputs, true) }}:
+#   - download: current
+#     artifact: tfoutput-$(ENVIRONMENT_NAME)
+#     displayName: Get Terraform Outputs
+#   ## TODO: make TF Outputs consumable by npm build
 
 - task: Cache@2
   displayName: Check Dependency Cache
