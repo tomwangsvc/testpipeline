@@ -7,8 +7,6 @@ steps:
   artifact: react-app-$(ENVIRONMENT_NAME)
   displayName: Get App Build
 
-- script: printenv
-
 - task: AWSShellScript@1
   displayName: Sync S3 Bucket
   inputs:
