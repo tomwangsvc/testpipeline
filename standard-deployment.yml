@@ -112,6 +112,7 @@ stages:
   - ${{ if ne(parameters.terraformOutputEnv, '') }}:
     - job: GetTFOutput
       displayName: Get Terraform Outputs
+      dependsOn: Terraform
       condition: succeededOrFailed()
       steps:
       - download: current
@@ -124,7 +125,7 @@ stages:
         - script: |
             value=$(terraform output -raw ${{ output.Value }})
             echo "##vso[task.setvariable variable=value;isOutput=true]${value}"
-          displayName: Get ${{ output.Value }})
+          displayName: Get ${{ output.Value }}
           name: ${{ output.Key }}
           workingDirectory: terraform
 
