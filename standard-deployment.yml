@@ -113,6 +113,7 @@ stages:
     - job: GetTFOutput
       displayName: Get Terraform Outputs
       dependsOn: Terraform
+      condition: succeededOrFailed('Terraform')
       steps:
       - download: current
         artifact: tfplan-$(ENVIRONMENT_NAME)
