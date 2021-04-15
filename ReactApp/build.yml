@@ -1,15 +1,4 @@
-parameters:
-- name: env
-  type: object
-  default: ''
-
 steps:
-# - ${{ if eq(parameters.useTFOutputs, true) }}:
-#   - download: current
-#     artifact: tfoutput-$(ENVIRONMENT_NAME)
-#     displayName: Get Terraform Outputs
-#   ## TODO: make TF Outputs consumable by npm build
-
 - task: Cache@2
   displayName: Check Dependency Cache
   inputs:
@@ -24,8 +13,7 @@ steps:
   displayName: Install Dependencies
   condition: ne(variables.CACHE_RESTORED, 'true')
 
-- script: printenv
-# ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
+- script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
   ${{ if ne(parameters.env, '') }}:
     env: ${{ parameters.env }} 

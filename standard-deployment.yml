@@ -25,12 +25,10 @@ parameters:
 - name: useTerraform
   type: string
   default: true
-# make Terraform outputs available to the BuildSources and DeployArtifacts jobs
-- name: useTFOutputs
-  type: boolean
-  default: false
 
 variables:
+- name: CI
+  value: true
 - template: helpers/select-environment.yml
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
@@ -55,7 +53,6 @@ stages:
     - template: Terraform/validate.yml
       parameters:
         useTerraform: ${{ parameters.useTerraform }}
-        useTFOutputs: ${{ parameters.useTFOutputs }}
         ${{ if eq(parameters.deployType, 'ADO') }}:
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
@@ -142,8 +139,6 @@ stages:
           deploy:  
             steps:
             - template: ${{ parameters.deployType }}/deploy.yml
-              parameters:
-                useTFOutputs: ${{ parameters.useTFOutputs }}
 
 - stage: Accept
   jobs:

@@ -4,8 +4,6 @@ parameters:
   default: ''
 - name: useTerraform
   type: string
-- name: useTFOutputs
-  type: boolean
   
 jobs:
 - job: Terraform

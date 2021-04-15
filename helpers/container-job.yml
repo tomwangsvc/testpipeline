@@ -34,8 +34,5 @@ jobs:
         ${{ var.Key }}: ${{ var.Value }}
   container: 
     image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
   steps:
-  - script: printenv
   - ${{ parameters.steps }}
