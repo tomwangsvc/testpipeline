@@ -112,7 +112,7 @@ stages:
   - ${{ if ne(parameters.terraformOutputEnv, '') }}:
     - job: GetTFOutput
       displayName: Get Terraform Outputs
-      condition: succeededOrFailed('Terraform')
+      condition: succeededOrFailed()
       steps:
       - download: current
         artifact: tfplan-$(ENVIRONMENT_NAME)
