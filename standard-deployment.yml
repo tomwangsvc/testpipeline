@@ -90,9 +90,9 @@ stages:
         ${{ if ne(parameters.terraformOutputEnv, '') }}:
           dependsOn: GetTFOutput
           condition: succeeded('GetTFOutput')
-        variables:
-          ${{ each output in parameters.terraformOutputEnv }}:
-            ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
+          variables:
+            ${{ each output in parameters.terraformOutputEnv }}:
+              ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
         steps:
         - template: ${{ parameters.deployType }}/build.yml        
 
@@ -121,9 +121,10 @@ stages:
         - GetTFOutput
       condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables.IS_INFRA_CHANGE, false)))
       environment: $(ENVIRONMENT_NAME)
-      variables:
-        ${{ each output in parameters.terraformOutputEnv }}:
-          ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
+      ${{ if ne(parameters.terraformOutputEnv, '') }}:
+        variables:
+          ${{ each output in parameters.terraformOutputEnv }}:
+            ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
       strategy:
         runOnce:
           deploy:  
