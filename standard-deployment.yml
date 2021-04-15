@@ -98,9 +98,6 @@ stages:
       - template: Terraform/init.yml
         parameters:
           useTerraform: ${{ parameters.useTerraform }}
-      # - script: terraform refresh
-      #   displayName: Refresh State
-      #   workingDirectory: terraform
       - ${{ each output in parameters.terraformOutputEnv }}:
         - script: |
             value=$(terraform output -raw ${{ output.Value }})
