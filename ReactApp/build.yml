@@ -1,4 +1,5 @@
 steps:
+- script: printenv
 - task: Cache@2
   displayName: Check Dependency Cache
   inputs:
