@@ -35,8 +35,8 @@ jobs:
 
   # Allow Terraform Apply to be skipped if there are no changes
   - script: |
-      isResourceChange=$(jq -er '.resource_changes | map(.change.actions) | flatten | select(. != "no-op") | length | . > 0' $tfjson)
-      isOutputChange=$(jq -er '.output_changes | map(.["actions"]) | flatten | select(. != "no-op") | length | . > 0' $tfjson)
+      isResourceChange=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
+      isOutputChange=$(jq -er '.output_changes | map(.["actions"]) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
       echo "##vso[task.setvariable variable=isResourceChange;isOutput=true]${isResourceChange}"
       echo "##vso[task.setvariable variable=isOutputChange;isOutput=true]${isOutputChange}"
     name: TerraformCondition
