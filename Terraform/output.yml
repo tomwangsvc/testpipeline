@@ -20,7 +20,6 @@ jobs:
       useTerraform: ${{ parameters.useTerraform }}
 
   - ${{ each entry in parameters.terraformOutputEnv }}:
-    - script: echo 
     - script: |
         output=$(terraform output -json ${{ entry.Value }} | jq -er '.')
         echo "##vso[task.setvariable variable=value;isOutput=true]${output}"
