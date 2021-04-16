@@ -4,7 +4,6 @@ parameters:
 
 steps:
 - ${{ if ne(parameters.useTerraform, false) }}:
-  - script: echo ${{ parameters.useTerraform }}
   # get the version from the useTerraform param if set
   - ${{ if ne(parameters.useTerraform, true) }}:
     - script: echo "##vso[task.setvariable variable=version;isOutput=true]${TF_VERSION}"

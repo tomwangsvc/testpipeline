@@ -20,9 +20,14 @@ jobs:
       useTerraform: ${{ parameters.useTerraform }}
 
   - ${{ each output in parameters.terraformOutputEnv }}:
+    - script: echo 
     - script: |
-        value=$(terraform output -raw ${{ output.Value }})
-        echo "##vso[task.setvariable variable=value;isOutput=true]${value}"
+        echo $lookpValue
+        output=$(terraform output -raw $lookpValue)
+        echo $output
+        echo "##vso[task.setvariable variable=value;isOutput=true]${output}"
       displayName: Get ${{ output.Value }}
       name: ${{ output.Key }}
       workingDirectory: terraform
+      env:
+        lookpValue: ${{ output.Value }}
