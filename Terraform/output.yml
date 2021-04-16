@@ -23,7 +23,7 @@ jobs:
     - script: echo 
     - script: |
         echo $lookpValue
-        output=$(terraform output -json $lookupValue)
+        output=$(terraform output -json $lookupValue | jq -er '.')
         echo $output
         echo "##vso[task.setvariable variable=value;isOutput=true]${output}"
       displayName: Get ${{ output.Value }}
