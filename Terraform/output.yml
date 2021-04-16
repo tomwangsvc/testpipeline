@@ -9,7 +9,7 @@ jobs:
 - job: GetTFOutput
   displayName: Get Terraform Outputs
   dependsOn: Terraform
-  condition: or(succeeded('Terraform'), eq(variables.IS_INFRA_CHANGE, false))
+  condition: or(succeeded('Terraform'), and(eq(variables.IS_INFRA_CHANGE, 'false'), eq(variables.IS_OUPUT_CHANGE, 'false')))
   steps:
   - download: current
     artifact: tfplan-$(ENVIRONMENT_NAME)
@@ -19,15 +19,11 @@ jobs:
     parameters:
       useTerraform: ${{ parameters.useTerraform }}
 
-  - ${{ each output in parameters.terraformOutputEnv }}:
+  - ${{ each entry in parameters.terraformOutputEnv }}:
     - script: echo 
     - script: |
-        echo $lookpValue
-        output=$(terraform output -json $lookupValue | jq -er '.')
-        echo $output
+        output=$(terraform output -json ${{ entry.Value }} | jq -er '.')
         echo "##vso[task.setvariable variable=value;isOutput=true]${output}"
-      displayName: Get ${{ output.Value }}
-      name: ${{ output.Key }}
+      displayName: Get ${{ entry.Value }}
+      name: ${{ entry.Key }}
       workingDirectory: terraform
-      env:
-        lookupValue: ${{ output.Value }}

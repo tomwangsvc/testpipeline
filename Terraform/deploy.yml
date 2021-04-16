@@ -22,6 +22,8 @@ jobs:
         steps:
         - checkout: self
 
+        - script: printenv
+
         - ${{ parameters.preDeploySteps }}
               
         - download: current
