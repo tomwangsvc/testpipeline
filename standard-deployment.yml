@@ -80,7 +80,8 @@ stages:
   dependsOn:
     - Validate
   variables:
-    IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
+    IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isResourceChange'] ]
+    IS_OUPUT_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isOutputChange'] ]
   jobs:
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
     - template: helpers/container-job.yml
@@ -99,7 +100,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), ne(variables.IS_INFRA_CHANGE, false))
+        condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, false), ne(variables.IS_OUPUT_CHANGE, false)))
         deployType: ${{ parameters.deployType }}
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
