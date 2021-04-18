@@ -108,11 +108,11 @@ stages:
         job: BuildSources
         displayName: Build ${{ parameters.deployType }}
         ${{ if ne(parameters.terraformOutputEnv, '') }}:
-          dependsOn: GetTFOutput
-          condition: succeeded('GetTFOutput')
+          dependsOn: PublishTFOutputs
+          condition: succeeded('PublishTFOutputs')
           variables:
             ${{ each output in parameters.terraformOutputEnv }}:
-              ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
+              ${{ output.Key }}: $[ dependencies.PublishTFOutputs.outputs['${{ output.Key }}.value'] ]
         steps:
         - template: ${{ parameters.deployType }}/build.yml        
 
@@ -122,12 +122,12 @@ stages:
       dependsOn: 
         - Terraform
         - BuildSources
-        - GetTFOutput
+        - PublishTFOutputs
       environment: $(ENVIRONMENT_NAME)
       ${{ if ne(parameters.terraformOutputEnv, '') }}:
         variables:
           ${{ each output in parameters.terraformOutputEnv }}:
-            ${{ output.Key }}: $[ dependencies.GetTFOutput.outputs['${{ output.Key }}.value'] ]
+            ${{ output.Key }}: $[ dependencies.PublishTFOutputs.outputs['${{ output.Key }}.value'] ]
       strategy:
         runOnce:
           deploy:  
