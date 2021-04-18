@@ -83,6 +83,25 @@ stages:
     IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isResourceChange'] ]
     IS_OUPUT_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isOutputChange'] ]
   jobs:
+  - ${{ if ne(parameters.useTerraform, false) }}:
+    - template: Terraform/deploy.yml
+      parameters:
+        condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
+        dependsOn: 
+        ${{ if in(parameters.deployType, 'LambdaService') }}:
+          - BuildSources
+        env:
+          ${{ if in(parameters.deployType, 'ADO') }}:
+            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+        useTerraform: ${{ parameters.useTerraform }}
+        preDeploySteps: 
+        ${{ if in(parameters.deployType, 'LambdaService') }}:
+          - template: ${{ parameters.deployType }}/deploy.yml
+
+    - template: Terraform/output.yml
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
+
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
     - template: helpers/container-job.yml
       parameters: 
@@ -97,30 +116,13 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml        
 
-  - ${{ if ne(parameters.useTerraform, false) }}:
-    - template: Terraform/deploy.yml
-      parameters:
-        condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
-        deployType: ${{ parameters.deployType }}
-        useTerraform: ${{ parameters.useTerraform }}
-        ${{ if in(parameters.deployType, 'LambdaService') }}:
-          preDeploySteps: 
-          - template: ${{ parameters.deployType }}/deploy.yml
-
-  - ${{ if ne(parameters.terraformOutputEnv, '') }}:
-    - template: Terraform/output.yml
-      parameters:
-        terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
-        useTerraform: ${{ parameters.useTerraform }}
-
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
       displayName: Deploy ${{ parameters.deployType }}
       dependsOn: 
-        - BuildSources
         - Terraform
+        - BuildSources
         - GetTFOutput
-      condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables.IS_INFRA_CHANGE, false)))
       environment: $(ENVIRONMENT_NAME)
       ${{ if ne(parameters.terraformOutputEnv, '') }}:
         variables:
