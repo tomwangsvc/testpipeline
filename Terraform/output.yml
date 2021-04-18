@@ -15,17 +15,17 @@ jobs:
     - download: current
       artifact: tfplan-$(ENVIRONMENT_NAME)
       displayName: Get tfplan
-
-  - template: init.yml
-    parameters:
-      useTerraform: ${{ parameters.useTerraform }}
-
-  - script: echo $(terraform output -json) > $(Build.StagingDirectory)/tfoutput.json
-    displayName: Get Outputs
-
-  - publish: $(Build.StagingDirectory)
-    artifact: tfoutput-$(ENVIRONMENT_NAME)
-    displayName: Publish Outputs
+      
+    - template: init.yml
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
+    
+    - script: echo $(terraform output -json) > $(Build.StagingDirectory)/tfoutput.json
+      displayName: Get Outputs
+      
+    - publish: $(Build.StagingDirectory)
+      artifact: tfoutput-$(ENVIRONMENT_NAME)
+      displayName: Publish Outputs
 
 - ${{ if ne(parameters.terraformOutputEnv, '') }}:
   - job: GetTFOutput
