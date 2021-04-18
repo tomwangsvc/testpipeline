@@ -87,15 +87,15 @@ stages:
     - template: Terraform/deploy.yml
       parameters:
         condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
-        dependsOn: 
         ${{ if in(parameters.deployType, 'LambdaService') }}:
+          dependsOn: 
           - BuildSources
-        env:
-          ${{ if in(parameters.deployType, 'ADO') }}:
+        ${{ if in(parameters.deployType, 'ADO') }}:
+          env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
         useTerraform: ${{ parameters.useTerraform }}
-        preDeploySteps: 
         ${{ if in(parameters.deployType, 'LambdaService') }}:
+          preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
 
     - template: Terraform/output.yml
