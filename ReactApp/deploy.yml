@@ -8,8 +8,6 @@ steps:
     terraformOutputEnv: 
       S3_BUCKET_NAME: website_bucket 
 
-- script: printenv
-
 - download: current
   artifact: react-app-$(ENVIRONMENT_NAME)
   displayName: Get App Build
