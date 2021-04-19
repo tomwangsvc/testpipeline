@@ -1,0 +1,19 @@
+# map Terraform outputs to variables so they can be consumed by dependent jobs
+parameters:
+- name: terraformOutputEnv
+  type: object
+
+steps:
+- download: current
+  artifact: tfoutput-$(ENVIRONMENT_NAME)
+  displayName: Download Outputs
+
+- ${{ each entry in parameters.terraformOutputEnv }}:
+  - script: |
+      output=$(jq -er '.${{ entry.Value }}.value')
+      echo $output
+      export ${{ entry.Key }}=$output
+      echo "##vso[task.setvariable variable=value;isOutput=true]${output}"
+    displayName: Map ${{ entry.Key }}
+    name: ${{ entry.Key }}
+    workingDirectory: $(Pipeline.Workspace)/tfoutput-$(ENVIRONMENT_NAME)

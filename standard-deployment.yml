@@ -98,7 +98,7 @@ stages:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
 
-    - template: Terraform/output.yml
+    - template: Terraform/output-publish.yml
       parameters:
         useTerraform: ${{ parameters.useTerraform }}
 
@@ -110,29 +110,23 @@ stages:
         ${{ if ne(parameters.terraformOutputEnv, '') }}:
           dependsOn: PublishTFOutputs
           condition: succeeded('PublishTFOutputs')
-          variables:
-            ${{ each output in parameters.terraformOutputEnv }}:
-              ${{ output.Key }}: $[ dependencies.PublishTFOutputs.outputs['${{ output.Key }}.value'] ]
         steps:
-        - template: ${{ parameters.deployType }}/build.yml        
+        - template: ${{ parameters.deployType }}/build.yml
+          parameters:
+            terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
       displayName: Deploy ${{ parameters.deployType }}
-      dependsOn: 
-        - Terraform
-        - BuildSources
-        - PublishTFOutputs
+      dependsOn: BuildSources
       environment: $(ENVIRONMENT_NAME)
-      ${{ if ne(parameters.terraformOutputEnv, '') }}:
-        variables:
-          ${{ each output in parameters.terraformOutputEnv }}:
-            ${{ output.Key }}: $[ dependencies.PublishTFOutputs.outputs['${{ output.Key }}.value'] ]
       strategy:
         runOnce:
           deploy:  
             steps:
             - template: ${{ parameters.deployType }}/deploy.yml
+              parameters:
+                terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
 - stage: Accept
   jobs:

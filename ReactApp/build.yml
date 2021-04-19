@@ -1,4 +1,16 @@
+parameters:
+- name: terraformOutputEnv
+  type: object
+  default: ''
+
 steps:
+- ${{ if ne(parameters.terraformOutputEnv, '') }}:
+  - template: ../Terraform/output-publish.yml
+    parameters:
+      ${{ each output in parameters.terraformOutputEnv }}:
+        ${{ output.Key }}: ${{ output.Value }}
+
+-script: printenv
 - task: Cache@2
   displayName: Check Dependency Cache
   inputs:
@@ -19,3 +31,8 @@ steps:
 - publish: $(System.DefaultWorkingDirectory)/build/
   artifact: react-app-$(ENVIRONMENT_NAME)
   displayName: Publish App Artifact
+
+
+
+  # ${{ each output in parameters.terraformOutputEnv }}:
+  #           ${{ output.Key }}: $[ dependencies.PublishTFOutputs.outputs['${{ output.Key }}.value'] ]
