@@ -3,6 +3,13 @@
 steps:
 - checkout: none
 
+- template: ../Terraform/output-map.yml
+  parameters: 
+    terraformOutputEnv: 
+      S3_BUCKET_NAME: website_bucket 
+
+- script: printenv
+
 - download: current
   artifact: react-app-$(ENVIRONMENT_NAME)
   displayName: Get App Build
