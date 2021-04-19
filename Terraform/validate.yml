@@ -8,6 +8,9 @@ parameters:
 jobs:
 - job: Terraform
   steps:
+  - checkout: self
+    submodules: true
+    
   - template: init.yml
     parameters:
       useTerraform: ${{ parameters.useTerraform }}
