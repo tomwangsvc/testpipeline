@@ -6,7 +6,8 @@ parameters:
 steps:
 - ${{ if ne(parameters.terraformOutputEnv, '') }}:
   - template: ../Terraform/output-map.yml
-    parameters: ${{ parameters.terraformOutputEnv }}
+    parameters: 
+      REACT_APP_WEBSITE_ENDPOINT: website_endpoint
 
 - script: printenv
 - task: Cache@2
