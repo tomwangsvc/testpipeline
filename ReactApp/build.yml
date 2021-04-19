@@ -10,7 +10,7 @@ steps:
       ${{ each output in parameters.terraformOutputEnv }}:
         ${{ output.Key }}: ${{ output.Value }}
 
--script: printenv
+- script: printenv
 - task: Cache@2
   displayName: Check Dependency Cache
   inputs:
