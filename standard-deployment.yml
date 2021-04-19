@@ -86,7 +86,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
+        condition: and(succeeded(), or(in(${{ parameters.deployType }}, 'LambdaService'), ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           dependsOn: BuildSources
         ${{ if in(parameters.deployType, 'ADO') }}:
