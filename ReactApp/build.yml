@@ -5,7 +5,7 @@ parameters:
 
 steps:
 - ${{ if ne(parameters.terraformOutputEnv, '') }}:
-  - template: ../Terraform/output-publish.yml
+  - template: ../Terraform/output-map.yml
     parameters:
       ${{ each output in parameters.terraformOutputEnv }}:
         ${{ output.Key }}: ${{ output.Value }}
