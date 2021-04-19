@@ -7,7 +7,10 @@ steps:
 - ${{ if ne(parameters.terraformOutputEnv, '') }}:
   - template: ../Terraform/output-map.yml
     parameters: 
-      terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+      terraformOutputEnv: 
+        ${{ each output in parameters.terraformOutputEnv }}:
+          ${{ if startsWith(output.Key, 'REACT_APP_') }}:
+            ${{ output.Key }}: ${{ output.Value }}
 
 - script: printenv
 - task: Cache@2
