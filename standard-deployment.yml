@@ -97,9 +97,9 @@ stages:
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
-    - template: Terraform/output-publish.yml
-      parameters:
-        useTerraform: ${{ parameters.useTerraform }}
+  - template: Terraform/output-publish.yml
+    parameters:
+      useTerraform: ${{ parameters.useTerraform }}
 
   - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
     - template: helpers/container-job.yml
