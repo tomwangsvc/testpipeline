@@ -10,7 +10,7 @@ steps:
 
 - ${{ each entry in parameters.terraformOutputEnv }}:
   - script: |
-      output=$(jq -er '.${{ entry.Value }}.value' tfoutput-$(ENVIRONMENT_NAME))
+      output=$(jq -er '.${{ entry.Value }}.value' tfoutput.json)
       echo $output
       # export ${{ entry.Key }}=$output
       echo "##vso[task.setvariable variable=value;isOutput=true]${output}"
