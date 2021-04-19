@@ -18,6 +18,7 @@ parameters:
 jobs:
 - deployment: Terraform
   condition: ${{ parameters.condition }}
+  dependsOn: ${{ parameters.dependsOn }}
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:
