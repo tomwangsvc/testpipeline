@@ -4,9 +4,6 @@ parameters:
   default: ''
 - name: useTerraform
   type: string
-  default: true
-- name: useTFOutputs
-  type: boolean
   
 jobs:
 - job: Terraform
@@ -14,6 +11,15 @@ jobs:
   - template: init.yml
     parameters:
       useTerraform: ${{ parameters.useTerraform }}
+
+  - script: |
+      terraform fmt -recursive -diff -check
+      if [ $? -ne 0 ]
+      then
+        echo "##vso[task.logissue type=error]Format check failed. Run 'terraform fmt' locally to resolve."
+        exit 1
+      fi
+    displayName: Check Format
 
   - task: TerraformTaskV1@0
     displayName: Plan
@@ -27,15 +33,16 @@ jobs:
       commandOptions: -out=$(Build.StagingDirectory)/tfplan -var-file=$(TF_VAR_FILE)
       environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
 
-  - ${{ if eq(parameters.useTFOutputs, false) }}:
   # Allow Terraform Apply to be skipped if there are no changes
-    - script: |
-        isTerraformRequired=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
-        echo "##vso[task.setvariable variable=isRequired;isOutput=true]${isTerraformRequired}"
-      name: TerraformCondition
-      displayName: Apply Condition
-      env:
-        tfjson: $(TerraformPlan.jsonPlanFilePath)
+  - script: |
+      isResourceChange=$(jq -er '.resource_changes | map(.change.actions) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
+      isOutputChange=$(jq -er '.output_changes | map(.["actions"]) | flatten | map(select(. != "no-op")) | length | . > 0' $tfjson)
+      echo "##vso[task.setvariable variable=isResourceChange;isOutput=true]${isResourceChange}"
+      echo "##vso[task.setvariable variable=isOutputChange;isOutput=true]${isOutputChange}"
+    name: TerraformCondition
+    displayName: Requires Change?
+    env:
+      tfjson: $(TerraformPlan.jsonPlanFilePath)
 
   - script: mv $(TerraformPlan.jsonPlanFilePath) $(Build.StagingDirectory)/tfplan.json
     name: StageTFPlanJson

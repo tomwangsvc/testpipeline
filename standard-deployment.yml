@@ -11,6 +11,10 @@ parameters:
   - ADO
   - ReactApp
   - LambdaService
+# set terraform output variables to environment variables
+- name: terraformOutputEnv
+  type: object
+  default: ''
 # use a Docker container to run Validate and Build stages
 # expects a named image, otherwise uses your repo's devcontainer (default)
 - name: useContainerImage 
@@ -21,12 +25,10 @@ parameters:
 - name: useTerraform
   type: string
   default: true
-# make Terraform outputs available to the BuildSources and DeployArtifacts jobs
-- name: useTFOutputs
-  type: boolean
-  default: false
 
 variables:
+- name: CI
+  value: true
 - template: helpers/select-environment.yml
   parameters:
     defaultBranchName: ${{ parameters.defaultBranchName }}
@@ -50,7 +52,7 @@ stages:
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/validate.yml
       parameters:
-        useTFOutputs: ${{ parameters.useTFOutputs }}
+        useTerraform: ${{ parameters.useTerraform }}
         ${{ if eq(parameters.deployType, 'ADO') }}:
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
@@ -78,39 +80,45 @@ stages:
   dependsOn:
     - Validate
   variables:
-    HAS_TERRAFORM_APPLY: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isRequired'] ]
-    ${{ if in(parameters.deployType, 'ReactApp') }}:
-      FORCE_TERRAFORM_APPLY: true 
+    IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isResourceChange'] ]
+    IS_OUPUT_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isOutputChange'] ]
   jobs:
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
-    - template: helpers/container-job.yml
-      parameters: 
-        job: BuildSources
-        displayName: Build ${{ parameters.deployType }}
-        ${{ if eq(parameters.useTFOutputs, true) }}:
-          dependsOn: Terraform
-        steps:
-        - template: ${{ parameters.deployType }}/build.yml
-          parameters:
-            useTFOutputs: ${{ parameters.useTFOutputs }} 
-
   - ${{ if ne(parameters.useTerraform, false) }}:
     - template: Terraform/deploy.yml
       parameters:
-        condition: and(succeeded(), or(eq(variables.FORCE_TERRAFORM_APPLY, true), ne(variables.HAS_TERRAFORM_APPLY, false)))
-        deployType: ${{ parameters.deployType }}
+        ${{ if notIn(parameters.deployType, 'LambdaService') }}:
+          condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
+        ${{ if in(parameters.deployType, 'LambdaService') }}:
+          dependsOn: BuildSources
+        ${{ if in(parameters.deployType, 'ADO') }}:
+          env:
+            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
         useTerraform: ${{ parameters.useTerraform }}
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
 
+    - template: Terraform/output-publish.yml
+      parameters:
+        useTerraform: ${{ parameters.useTerraform }}
+
+  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    - template: helpers/container-job.yml
+      parameters: 
+        job: BuildSources
+        displayName: Build ${{ parameters.deployType }}
+        ${{ if ne(parameters.terraformOutputEnv, '') }}:
+          dependsOn: PublishTFOutputs
+          condition: succeeded('PublishTFOutputs')
+        steps:
+        - template: ${{ parameters.deployType }}/build.yml
+          parameters:
+            terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
       displayName: Deploy ${{ parameters.deployType }}
-      dependsOn: 
-        - BuildSources
-        - Terraform
-      condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), eq(variables.HAS_TERRAFORM_APPLY, false)))
+      dependsOn: BuildSources
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
@@ -118,9 +126,9 @@ stages:
             steps:
             - template: ${{ parameters.deployType }}/deploy.yml
               parameters:
-                useTFOutputs: ${{ parameters.useTFOutputs }}
+                terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
-- stage: Update
+- stage: Accept
   jobs:
   - deployment: NotifyClients
     displayName: Notify Clients

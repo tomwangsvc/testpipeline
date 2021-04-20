@@ -1,13 +1,17 @@
 parameters:
-- name: useTFOutputs
-  type: boolean
+- name: terraformOutputEnv
+  type: object
+  default: ''
 
 steps:
-- ${{ if eq(parameters.useTFOutputs, true) }}:
-  - download: current
-    artifact: tfoutput-$(ENVIRONMENT_NAME)
-    displayName: Get Terraform Outputs
-  ## TODO: make TF Outputs consumable by npm build
+- ${{ if ne(parameters.terraformOutputEnv, '') }}:
+  - template: ../Terraform/output-map.yml
+    parameters: 
+      terraformOutputEnv:
+        # map Terraform outputs to respective REACT_APP env variables 
+        ${{ each output in parameters.terraformOutputEnv }}:
+          ${{ if startsWith(output.Key, 'REACT_APP_') }}:
+            ${{ output.Key }}: ${{ output.Value }}
 
 - task: Cache@2
   displayName: Check Dependency Cache
@@ -25,6 +29,10 @@ steps:
 
 - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
+  env:
+    ${{ each output in parameters.terraformOutputEnv }}:
+      ${{ if startsWith(output.Key, 'REACT_APP_') }}:
+        ${{ output.Key }}: $(${{ output.Key }}.value)
 
 - publish: $(System.DefaultWorkingDirectory)/build/
   artifact: react-app-$(ENVIRONMENT_NAME)

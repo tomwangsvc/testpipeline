@@ -1,0 +1,25 @@
+# Publish Terraform outputs as artifact in case Terraform apply is skipped
+parameters:
+- name: useTerraform
+  type: string
+  
+jobs:
+- job: PublishTFOutputs
+  displayName: Publish Terraform Outputs
+  condition: and(eq(variables.IS_INFRA_CHANGE, 'false'), eq(variables.IS_OUPUT_CHANGE, 'false'))
+  steps:
+  - download: current
+    artifact: tfplan-$(ENVIRONMENT_NAME)
+    displayName: Get tfplan
+
+  - template: init.yml
+    parameters:
+      useTerraform: ${{ parameters.useTerraform }}
+  
+  - script: echo $(terraform output -json) > $(Build.StagingDirectory)/tfoutput.json
+    displayName: Get Outputs
+    workingDirectory: terraform
+    
+  - publish: $(Build.StagingDirectory)
+    artifact: tfoutput-$(ENVIRONMENT_NAME)
+    displayName: Publish Outputs

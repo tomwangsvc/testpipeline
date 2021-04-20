@@ -2,9 +2,12 @@ parameters:
 - name: condition
   type: string
   default: succeeded()
-- name: deployType 
+- name: dependsOn
   type: string
-  default: 'null'
+  default: ''
+- name: env 
+  type: object
+  default: ''
 - name: preDeploySteps
   type: stepList
   default: []
@@ -15,6 +18,7 @@ parameters:
 jobs:
 - deployment: Terraform
   condition: ${{ parameters.condition }}
+  dependsOn: ${{ parameters.dependsOn }}
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:
@@ -35,9 +39,8 @@ jobs:
         - task: TerraformTaskV1@0
           displayName: Apply
           name: TerraformApply
-          ${{ if eq(parameters.deployType, 'ADO') }}:
-            env:
-              AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+          ${{ if ne(parameters.env, '') }}:
+            env: ${{ parameters.env }}
           inputs:
             provider: $(TF_PROVIDER)
             command: apply

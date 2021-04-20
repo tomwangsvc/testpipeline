@@ -12,6 +12,9 @@ parameters:
   default: ''
 - name: steps
   type: stepList
+- name: variables
+  type: object
+  default: ''
 
 jobs:
 - job: ${{ parameters.job }}
@@ -26,9 +29,10 @@ jobs:
 
   variables:
     CONTAINER_IMAGE: $[ coalesce(dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
+    ${{ if ne(parameters.variables, '') }}:
+      ${{ each var in parameters.variables }}:
+        ${{ var.Key }}: ${{ var.Value }}
   container: 
     image: $(CONTAINER_IMAGE)
-    env:
-      CI: true
   steps:
   - ${{ parameters.steps }}
