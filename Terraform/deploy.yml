@@ -25,6 +25,7 @@ jobs:
       deploy:  
         steps:
         - checkout: self
+          persistCredentials: true
 
         - ${{ parameters.preDeploySteps }}
               

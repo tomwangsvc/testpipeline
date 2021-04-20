@@ -9,6 +9,7 @@ jobs:
 - job: Terraform
   steps:
   - checkout: self
+    persistCredentials: true
 
   - template: init.yml
     parameters:

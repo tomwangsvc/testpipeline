@@ -36,9 +36,6 @@ steps:
 
 # pipeline will use the pre-installed version if a different version not installed above
 
-- checkout: self
-  persistCredentials: true
-
 - script: |
     AUTH=$(echo -n ":$REPO_PAT" | openssl base64 | tr -d '\n')
     git config --global --add http.https://WatercareServicesLimited@dev.azure.com/WatercareServicesLimited/DevOps/_git/terraform-modules.extraheader "AUTHORIZATION: basic $AUTH"
