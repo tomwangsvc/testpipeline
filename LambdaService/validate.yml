@@ -5,7 +5,7 @@ parameters:
 
 steps:
 - ${{ if eq(parameters.buildDirectories, '') }}:
-  - script: echo "##vso[task.logissue type=warning]Warning: no build directories specified."
+  - script: echo "##vso[task.logissue type=warning]No build directories specified."
 
 - ${{ if ne(parameters.buildDirectories, '') }}:
   - ${{ each entry in parameters.buildDirectories }}:
