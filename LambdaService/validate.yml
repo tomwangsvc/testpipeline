@@ -16,7 +16,7 @@ steps:
     - task: npmAuthenticate@0
       displayName: Override .npmrc
       inputs:
-        workingFile: lambdas/${{ entry.Key}}.npmrc
+        workingFile: lambdas/${{ entry.Key}}/.npmrc
 # - script: |
 #     for dir in *
 #       do (cd "$dir" && npm install && npm test)
