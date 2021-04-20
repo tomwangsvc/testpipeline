@@ -119,7 +119,8 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
-            terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+            ${{ if notIn(parameters.deployType, 'LambdaService') }}:
+              terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
             ${{ if in(parameters.deployType, 'LambdaService') }}:
               buildDirectories: ${{ parameters.buildDirectories }}
 
