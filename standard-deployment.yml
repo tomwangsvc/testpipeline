@@ -112,8 +112,9 @@ stages:
           condition: succeeded('PublishTFOutputs')
         steps:
         - template: ${{ parameters.deployType }}/build.yml
-          parameters:
-            terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+          ${{ if ne(parameters.terraformOutputEnv, '') }}:
+            parameters:
+              terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
@@ -125,8 +126,9 @@ stages:
           deploy:  
             steps:
             - template: ${{ parameters.deployType }}/deploy.yml
-              parameters:
-                terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+              ${{ if ne(parameters.terraformOutputEnv, '') }}:
+                parameters:
+                  terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
 - stage: Accept
   jobs:

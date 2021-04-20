@@ -29,10 +29,11 @@ steps:
 
 - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
-  env:
-    ${{ each output in parameters.terraformOutputEnv }}:
-      ${{ if startsWith(output.Key, 'REACT_APP_') }}:
-        ${{ output.Key }}: $(${{ output.Key }}.value)
+  ${{ if ne(parameters.terraformOutputEnv, '') }}:
+    env:
+      ${{ each output in parameters.terraformOutputEnv }}:
+        ${{ if startsWith(output.Key, 'REACT_APP_') }}:
+          ${{ output.Key }}: $(${{ output.Key }}.value)
 
 - publish: $(System.DefaultWorkingDirectory)/build/
   artifact: react-app-$(ENVIRONMENT_NAME)
