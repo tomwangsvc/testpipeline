@@ -1,10 +1,14 @@
+parameters:
+- name: directory
+  type: string
+
 steps:  
 - task: Npm@1
-  displayName: Install ${{ entry.Key}}
+  displayName: Install ${{ parameters.name }}
   inputs:
     command: install
-    workingDir: lambdas/${{ entry.Key}}
+    workingDir: lambdas/${{ parameters.name }}
 
 - script: npm test
-  displayName: Unit Test ${{ entry.Key}}
-  workingDirectory: lambdas/${{ entry.Key}}
+  displayName: Unit Test ${{ parameters.name }}
+  workingDirectory: lambdas/${{ parameters.name }}

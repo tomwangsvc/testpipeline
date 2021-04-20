@@ -79,6 +79,8 @@ stages:
           containerImage: ${{ sourceDirectory.image }}
           steps:
           - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}-validate.yml
+            parameters:
+              name: ${{ sourceDirectory.name }}
 
   - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
