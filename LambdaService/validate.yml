@@ -9,7 +9,9 @@ steps:
 
 - ${{ if ne(parameters.buildDirectories, '') }}:
   - ${{ each entry in parameters.buildDirectories }}:
-    - script: echo "${{ entry.Key}}:${{ entry.Value }}"
+    - script: ls ${{ entry.Key}}
+      displayName: Unit Tests
+      workingDirectory: lambdas/${{ entry.Key}}
 # - script: |
 #     for dir in *
 #       do (cd "$dir" && npm install && npm test)
