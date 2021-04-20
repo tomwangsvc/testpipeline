@@ -8,23 +8,13 @@ steps:
   - script: echo "##vso[task.logissue type=warning]No build directories specified."
 
 - ${{ if ne(parameters.buildDirectories, '') }}:
-  - ${{ each entry in parameters.buildDirectories }}:
-    - script: ls -a
-      displayName: ${{ entry.Value}}
-      workingDirectory: lambdas/${{ entry.Key}}
-    
+  - ${{ each entry in parameters.buildDirectories }}:    
     - task: Npm@1
+      displayName: Install ${{ entry.Key}}
       inputs:
-        command: 'install'
-        workingDir: 'lambdas/${{ entry.Key}}'
-    
-    # - task: npmAuthenticate@0
-    #   displayName: Override .npmrc
-    #   inputs:
-    #     workingFile: lambdas/${{ entry.Key}}/.npmrc
-# - script: |
-#     for dir in *
-#       do (cd "$dir" && npm install && npm test)
-#     done
-#   displayName: Unit Tests
-#   workingDirectory: lambdas
+        command: install
+        workingDir: lambdas/${{ entry.Key}}
+
+    - script: npm test
+      displayName: Unit Test ${{ entry.Key}}
+      workingDirectory: lambdas/${{ entry.Key}}
