@@ -2,9 +2,9 @@ parameters:
 - name: buildDirectories
   type: object
   default: ''
-  
+
 steps:
-${{ if eq(parameters.buildDirectories, '')}}:
+- ${{ if eq(parameters.buildDirectories, '') }}:
   - script: echo "##vso[task.logissue type=warning]Warning no buildDirectories specified."
 
 - script: |
