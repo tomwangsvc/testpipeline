@@ -9,7 +9,7 @@ steps:
 
 - ${{ if ne(parameters.buildDirectories, '') }}:
   - ${{ each entry in parameters.buildDirectories }}:
-    - script: ls ${{ entry.Key}}
+    - script: ls
       displayName: Unit Tests
       workingDirectory: lambdas/${{ entry.Key}}
 # - script: |
