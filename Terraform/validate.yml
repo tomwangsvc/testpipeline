@@ -23,6 +23,7 @@ jobs:
         exit 1
       fi
     displayName: Check Format
+    condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
 
   - task: TerraformTaskV1@0
     displayName: Plan
