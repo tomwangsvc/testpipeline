@@ -13,10 +13,15 @@ steps:
       displayName: ${{ entry.Value}}
       workingDirectory: lambdas/${{ entry.Key}}
     
-    - task: npmAuthenticate@0
-      displayName: Override .npmrc
+    - task: Npm@1
       inputs:
-        workingFile: lambdas/${{ entry.Key}}/.npmrc
+        command: 'install'
+        workingDir: 'lambdas/${{ entry.Key}}'
+    
+    # - task: npmAuthenticate@0
+    #   displayName: Override .npmrc
+    #   inputs:
+    #     workingFile: lambdas/${{ entry.Key}}/.npmrc
 # - script: |
 #     for dir in *
 #       do (cd "$dir" && npm install && npm test)
