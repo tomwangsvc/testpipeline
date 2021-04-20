@@ -60,7 +60,7 @@ stages:
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+  - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:
     # Identify the docker image for later stages
     - job: GetContainerImage
       displayName: Container Image
@@ -69,7 +69,18 @@ stages:
         parameters:
           useContainerImage: ${{ parameters.useContainerImage }}
 
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
+  - ${{ if and(in(parameters.deployType, 'LambdaService'), ne(parameters.buildDirectories, '')) }}:  
+    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+      - template: helpers/container-job.yml
+        parameters: 
+          job: Validate-${{ sourceDirectory.name }}
+          displayName: Validate ${{ sourceDirectory.name }}
+          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+          containerImage: ${{ sourceDirectory.image }}
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}-validate.yml
+
+  - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:  
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
@@ -78,9 +89,6 @@ stages:
         condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
-          ${{ if in(parameters.deployType, 'LambdaService') }}:
-            parameters: 
-              buildDirectories: ${{ parameters.buildDirectories }}
 
 - stage: Deploy
   dependsOn:

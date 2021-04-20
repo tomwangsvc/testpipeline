@@ -1,0 +1,10 @@
+steps:  
+- task: Npm@1
+  displayName: Install ${{ entry.Key}}
+  inputs:
+    command: install
+    workingDir: lambdas/${{ entry.Key}}
+
+- script: npm test
+  displayName: Unit Test ${{ entry.Key}}
+  workingDirectory: lambdas/${{ entry.Key}}
