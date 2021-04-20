@@ -1,4 +1,12 @@
+parameters:
+- name: buildDirectories
+  type: object
+  default: ''
+  
 steps:
+${{ if eq(parameters.buildDirectories, '')}}:
+  - script: echo "##vso[task.logissue type=warning]Warning no buildDirectories specified."
+
 - script: |
     for dir in *
       do (cd "$dir" && npm install && npm test)

@@ -2,6 +2,9 @@ parameters:
 - name: defaultBranchName
   type: string
   default: 'master'
+- name: buildDirectories
+  type: object
+  default: ''
 # determine what set of templates will be used for the pipeline
 - name: deployType 
   type: string
@@ -75,6 +78,9 @@ stages:
         condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
+          ${{ if in(parameters.deployType, 'LambdaService') }}:
+            parameters: 
+              buildDirectories: ${{ parameters.buildDirectories }}
 
 - stage: Deploy
   dependsOn:
@@ -97,6 +103,8 @@ stages:
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
+            parameters: 
+              buildDirectories: ${{ parameters.buildDirectories }}
 
     - template: Terraform/output-publish.yml
       parameters:
