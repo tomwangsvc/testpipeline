@@ -9,13 +9,6 @@ jobs:
 - job: Terraform
   steps:
   - checkout: self
-    persistCredentials: true
-
-  - script: |
-      AUTH=$(echo -n ":$REPO_PAT" | openssl base64 | tr -d '\n')
-      git config --global --add http.https://WatercareServicesLimited@dev.azure.com/WatercareServicesLimited/DevOps/_git/terraform-modules.extraheader "AUTHORIZATION: basic $AUTH"
-    env:
-      REPO_PAT: $(System.AccessToken)
 
   - template: init.yml
     parameters:
