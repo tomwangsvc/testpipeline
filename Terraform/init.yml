@@ -36,7 +36,7 @@ steps:
 
 # pipeline will use the pre-installed version if a different version not installed above
 
-- checkout: none
+- checkout: self
   persistCredentials: true
 
 - script: |
