@@ -135,8 +135,9 @@ stages:
           condition: succeeded('PublishTFOutputs')
         steps:
         - template: ${{ parameters.deployType }}/build.yml
-          parameters:
-            terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+          ${{ if ne(parameters.terraformOutputEnv, '') }}:
+            parameters:
+              terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
   - ${{ if ne(parameters.buildDirectories, '') }}:
     # multi-source build  
@@ -164,8 +165,9 @@ stages:
           deploy:  
             steps:
             - template: ${{ parameters.deployType }}/deploy.yml
-              parameters:
-                terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+              ${{ if ne(parameters.terraformOutputEnv, '') }}:
+                parameters:
+                  terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
 - stage: Accept
   jobs:
