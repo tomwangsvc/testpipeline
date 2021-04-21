@@ -31,7 +31,7 @@ jobs:
     condition: ${{ parameters.condition }}
 
   variables:
-    CONTAINER_IMAGE: $[ coalesce(${{ parameters.containerImage }}, dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
+    CONTAINER_IMAGE: $[ coalesce('${{ parameters.containerImage }}', dependencies.GetContainerImage.outputs['GetImage.url'], stageDependencies.Validate.GetContainerImage.outputs['GetImage.url'], '') ]
     ${{ if ne(parameters.variables, '') }}:
       ${{ each var in parameters.variables }}:
         ${{ var.Key }}: ${{ var.Value }}
