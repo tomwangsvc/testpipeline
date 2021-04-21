@@ -17,5 +17,5 @@ steps:
     stagingDir: $(Build.ArtifactStagingDirectory)
 
 - publish: $(Build.ArtifactStagingDirectory)
-  artifact: lambdas
-  displayName: Publish Lambda Artifacts
+  artifact: lambdas/${{ parameters.directory }}
+  displayName: Publish ${{ parameters.directory }}
