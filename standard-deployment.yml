@@ -73,7 +73,7 @@ stages:
     - ${{ each sourceDirectory in parameters.buildDirectories }}:
       - template: helpers/container-job.yml
         parameters: 
-          job: Validate-${{ sourceDirectory.name }}
+          job: Validate_${{ sourceDirectory.name }}
           displayName: Validate ${{ sourceDirectory.name }}
           condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
           containerImage: ${{ sourceDirectory.image }}
