@@ -2,6 +2,9 @@ parameters:
 - name: defaultBranchName
   type: string
   default: 'master'
+- name: buildDirectories
+  type: object
+  default: ''
 # determine what set of templates will be used for the pipeline
 - name: deployType 
   type: string
@@ -57,7 +60,7 @@ stages:
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+  - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:
     # Identify the docker image for later stages
     - job: GetContainerImage
       displayName: Container Image
@@ -66,7 +69,8 @@ stages:
         parameters:
           useContainerImage: ${{ parameters.useContainerImage }}
 
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
+  - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
+    # single-source build 
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
@@ -75,6 +79,20 @@ stages:
         condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
+
+  - ${{ if ne(parameters.buildDirectories, '') }}:
+    # multi-source build  
+    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+      - template: helpers/container-job.yml
+        parameters: 
+          job: Validate_${{ sourceDirectory.name }}
+          displayName: Validate ${{ sourceDirectory.name }}
+          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+          containerImage: ${{ sourceDirectory.image }}
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
+            parameters:
+              directory: ${{ sourceDirectory.name }}
 
 - stage: Deploy
   dependsOn:
@@ -89,7 +107,9 @@ stages:
         ${{ if notIn(parameters.deployType, 'LambdaService') }}:
           condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
         ${{ if in(parameters.deployType, 'LambdaService') }}:
-          dependsOn: BuildSources
+          dependsOn: 
+          - ${{ each sourceDirectory in parameters.buildDirectories }}:
+            - Build_${{ sourceDirectory.name }}
         ${{ if in(parameters.deployType, 'ADO') }}:
           env:
             AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
@@ -97,12 +117,15 @@ stages:
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
+            parameters:
+              buildDirectories: ${{ parameters.buildDirectories }}
 
     - template: Terraform/output-publish.yml
       parameters:
         useTerraform: ${{ parameters.useTerraform }}
 
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+  - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    # single-source build 
     - template: helpers/container-job.yml
       parameters: 
         job: BuildSources
@@ -115,6 +138,22 @@ stages:
           ${{ if ne(parameters.terraformOutputEnv, '') }}:
             parameters:
               terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+
+  - ${{ if ne(parameters.buildDirectories, '') }}:
+    # multi-source build  
+    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+      - template: helpers/container-job.yml
+        parameters: 
+          job: Build_${{ sourceDirectory.name }}
+          displayName: Build ${{ sourceDirectory.name }}
+          ${{ if ne(parameters.terraformOutputEnv, '') }}:
+            dependsOn: PublishTFOutputs
+            condition: succeeded('PublishTFOutputs')
+          containerImage: ${{ sourceDirectory.image }}
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
+            parameters:
+              directory: ${{ sourceDirectory.name }}
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts

@@ -40,6 +40,7 @@ steps:
 - script: |
     AUTH=$(echo -n ":$REPO_PAT" | openssl base64 | tr -d '\n')
     git config --global --add http.https://WatercareServicesLimited@dev.azure.com/WatercareServicesLimited/DevOps/_git/terraform-modules.extraheader "AUTHORIZATION: basic $AUTH"
+  displayName: Configure Module Access
   env:
     REPO_PAT: $(System.AccessToken)
 
