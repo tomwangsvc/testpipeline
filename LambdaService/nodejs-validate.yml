@@ -4,11 +4,11 @@ parameters:
 
 steps:  
 - task: Npm@1
-  displayName: Install ${{ parameters.name }}
+  displayName: Install ${{ parameters.directory }}
   inputs:
     command: install
-    workingDir: lambdas/${{ parameters.name }}
+    workingDir: lambdas/${{ parameters.directory }}
 
 - script: npm test
-  displayName: Unit Test ${{ parameters.name }}
-  workingDirectory: lambdas/${{ parameters.name }}
+  displayName: Unit Test ${{ parameters.directory }}
+  workingDirectory: lambdas/${{ parameters.directory }}
