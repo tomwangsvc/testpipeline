@@ -117,6 +117,8 @@ stages:
         ${{ if in(parameters.deployType, 'LambdaService') }}:
           preDeploySteps: 
           - template: ${{ parameters.deployType }}/deploy.yml
+            parameters:
+              buildDirectories: ${{ parameters.buildDirectories }}
 
     - template: Terraform/output-publish.yml
       parameters:
