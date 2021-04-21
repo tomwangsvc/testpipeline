@@ -1,0 +1,21 @@
+parameters:
+- name: directory
+  type: string
+
+steps:
+- task: Npm@1
+  displayName: Install ${{ parameters.directory }}
+  inputs:
+    command: install
+    workingDir: lambdas/${{ parameters.directory }}
+
+- script: zip -r "${stagingDir}/${lambdaName}.zip" .
+  displayName: Zip ${{ parameters.directory }}
+  workingDirectory: lambdas/${{ parameters.directory }}
+  env:
+    lambdaName: ${{ parameters.directory }} 
+    stagingDir: $(Build.ArtifactStagingDirectory)
+
+- publish: $(Build.ArtifactStagingDirectory)
+  artifact: lambdas
+  displayName: Publish Lambda Artifacts
