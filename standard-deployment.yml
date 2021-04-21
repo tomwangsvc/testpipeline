@@ -69,20 +69,8 @@ stages:
         parameters:
           useContainerImage: ${{ parameters.useContainerImage }}
 
-  - ${{ if and(in(parameters.deployType, 'LambdaService'), ne(parameters.buildDirectories, '')) }}:  
-    - ${{ each sourceDirectory in parameters.buildDirectories }}:
-      - template: helpers/container-job.yml
-        parameters: 
-          job: Validate_${{ sourceDirectory.name }}
-          displayName: Validate ${{ sourceDirectory.name }}
-          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-          containerImage: ${{ sourceDirectory.image }}
-          steps:
-          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}-validate.yml
-            parameters:
-              directory: ${{ sourceDirectory.name }}
-
-  - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:  
+  - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
+    # single-source build 
     - template: helpers/container-job.yml
       parameters: 
         job: ValidateSources
@@ -91,6 +79,20 @@ stages:
         condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
         steps:
         - template: ${{ parameters.deployType }}/validate.yml
+
+  - ${{ if ne(parameters.buildDirectories, '') }}:
+    # multi-source build  
+    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+      - template: helpers/container-job.yml
+        parameters: 
+          job: Validate_${{ sourceDirectory.name }}
+          displayName: Validate ${{ sourceDirectory.name }}
+          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+          containerImage: ${{ sourceDirectory.image }}
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
+            parameters:
+              directory: ${{ sourceDirectory.name }}
 
 - stage: Deploy
   dependsOn:
@@ -118,7 +120,8 @@ stages:
       parameters:
         useTerraform: ${{ parameters.useTerraform }}
 
-  - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+  - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+    # single-source build 
     - template: helpers/container-job.yml
       parameters: 
         job: BuildSources
@@ -129,10 +132,23 @@ stages:
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           parameters:
-            ${{ if notIn(parameters.deployType, 'LambdaService') }}:
-              terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
-            ${{ if in(parameters.deployType, 'LambdaService') }}:
-              buildDirectories: ${{ parameters.buildDirectories }}
+            terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+
+  - ${{ if ne(parameters.buildDirectories, '') }}:
+    # multi-source build  
+    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+      - template: helpers/container-job.yml
+        parameters: 
+          job: Build_${{ sourceDirectory.name }}
+          displayName: Build ${{ sourceDirectory.name }}
+          ${{ if ne(parameters.terraformOutputEnv, '') }}:
+            dependsOn: PublishTFOutputs
+            condition: succeeded('PublishTFOutputs')
+          containerImage: ${{ sourceDirectory.image }}
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
+            parameters:
+              directory: ${{ sourceDirectory.name }}
 
   - ${{ if in(parameters.deployType, 'ReactApp') }}:
     - deployment: DeployArtifacts
