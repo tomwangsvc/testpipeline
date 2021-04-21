@@ -131,8 +131,10 @@ stages:
         job: BuildSources
         displayName: Build ${{ parameters.deployType }}
         ${{ if ne(parameters.terraformOutputEnv, '') }}:
-          dependsOn: PublishTFOutputs
-          condition: succeeded('PublishTFOutputs')
+          dependsOn: 
+          - Terraform
+          - PublishTFOutputs
+          condition: or(succeeded('Terraform'), succeeded('PublishTFOutputs'))
         steps:
         - template: ${{ parameters.deployType }}/build.yml
           ${{ if ne(parameters.terraformOutputEnv, '') }}:
