@@ -161,6 +161,7 @@ stages:
     - deployment: DeployArtifacts
       displayName: Deploy ${{ parameters.deployType }}
       dependsOn: BuildSources
+      condition: succeeded('BuildSources')
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
