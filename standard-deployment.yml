@@ -1,4 +1,14 @@
 parameters:
+- name: chooseEnvironment
+  displayName: Environment
+  type: string
+  default: (auto)
+  values:
+  - (auto)
+  - DEV
+  - QA
+  - UAT
+  - PRD
 - name: defaultBranchName
   type: string
   default: 'master'
