@@ -244,6 +244,7 @@ stages:
 
 - ${{ if eq(parameters.destroy, true) }}:
   - stage: Destroy
+    displayName: 'WARNING: Destroy'
     jobs:
     - ${{ if ne(parameters.useTerraform, false) }}:
       - template: Terraform/destroy.yml
