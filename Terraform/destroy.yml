@@ -4,7 +4,8 @@ parameters:
   default: true
 
 jobs:
-- deployment: Terraform
+- deployment: TerraformDestroy
+  displayName: 'WARNING: Destroy'
   environment: $(ENVIRONMENT_NAME)
   strategy:
     runOnce:
