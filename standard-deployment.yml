@@ -34,7 +34,7 @@ variables:
   value: true
 - template: helpers/select-environment.yml
   parameters:
-    chooseEnvironment: ${{ parameters.environment }}
+    chooseEnvironment: ${{ parameters.chooseEnvironment }}
     defaultBranchName: ${{ parameters.defaultBranchName }}
     ${{ if eq(parameters.deployType, 'ADO') }}:
       skipDEV: true
