@@ -1,0 +1,27 @@
+parameters:
+- name: useTerraform
+  type: string
+  default: true
+
+jobs:
+- deployment: TerraformDestroy
+  displayName: 'WARNING: Destroy'
+  environment: $(ENVIRONMENT_NAME)
+  strategy:
+    runOnce:
+      deploy:  
+        steps:
+        - checkout: self
+
+        - template: init.yml
+          parameters:
+            useTerraform: ${{ parameters.useTerraform }}
+
+        - task: TerraformTaskV1@0
+          displayName: Destroy
+          name: TerraformDestroy
+          inputs:
+            provider: $(TF_PROVIDER)
+            command: destroy
+            workingDirectory: $(TF_PATH)
+            environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)

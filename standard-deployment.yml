@@ -1,4 +1,16 @@
 parameters:
+- name: chooseEnvironment
+  type: string
+  default: (auto)
+  values:
+  - (auto)
+  - DEV
+  - QA
+  - UAT
+  - PRD
+- name: destroy
+  type: boolean
+  default: false
 - name: defaultBranchName
   type: string
   default: 'master'
@@ -34,6 +46,7 @@ variables:
   value: true
 - template: helpers/select-environment.yml
   parameters:
+    chooseEnvironment: ${{ parameters.chooseEnvironment }}
     defaultBranchName: ${{ parameters.defaultBranchName }}
     ${{ if eq(parameters.deployType, 'ADO') }}:
       skipDEV: true
@@ -50,180 +63,190 @@ variables:
       sourcesDirectory: $(Build.SourcesDirectory)
 
 stages:
-- stage: Validate
-  jobs:
-  - ${{ if ne(parameters.useTerraform, false) }}:
-    - template: Terraform/validate.yml
-      parameters:
-        useTerraform: ${{ parameters.useTerraform }}
-        ${{ if eq(parameters.deployType, 'ADO') }}:
-          env:
-            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
-
-  - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:
-    # Identify the docker image for later stages
-    - job: GetContainerImage
-      displayName: Container Image
-      steps:
-      - template: helpers/container-get-image.yml
+- ${{ if ne(parameters.destroy, true) }}:
+  - stage: Validate
+    jobs:
+    - ${{ if ne(parameters.useTerraform, false) }}:
+      - template: Terraform/validate.yml
         parameters:
-          useContainerImage: ${{ parameters.useContainerImage }}
+          useTerraform: ${{ parameters.useTerraform }}
+          ${{ if eq(parameters.deployType, 'ADO') }}:
+            env:
+              AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
-  - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
-    # single-source build 
-    - template: helpers/container-job.yml
-      parameters: 
-        job: ValidateSources
-        displayName: Source Code
-        dependsOn: GetContainerImage
-        condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+    - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:
+      # Identify the docker image for later stages
+      - job: GetContainerImage
+        displayName: Container Image
         steps:
-        - template: ${{ parameters.deployType }}/validate.yml
+        - template: helpers/container-get-image.yml
+          parameters:
+            useContainerImage: ${{ parameters.useContainerImage }}
 
-  - ${{ if ne(parameters.buildDirectories, '') }}:
-    # multi-source build  
-    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+    - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:  
+      # single-source build 
       - template: helpers/container-job.yml
         parameters: 
-          job: Validate_${{ sourceDirectory.name }}
-          displayName: Validate ${{ sourceDirectory.name }}
+          job: ValidateSources
+          displayName: Source Code
+          dependsOn: GetContainerImage
           condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-          containerImage: ${{ sourceDirectory.image }}
           steps:
-          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
-            parameters:
-              directory: ${{ sourceDirectory.name }}
+          - template: ${{ parameters.deployType }}/validate.yml
 
-- stage: Deploy
-  dependsOn:
-    - Validate
-  variables:
-    IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isResourceChange'] ]
-    IS_OUPUT_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isOutputChange'] ]
-  jobs:
-  - ${{ if ne(parameters.useTerraform, false) }}:
-    - template: Terraform/deploy.yml
-      parameters:
-        ${{ if notIn(parameters.deployType, 'LambdaService') }}:
-          condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
-        ${{ if in(parameters.deployType, 'LambdaService') }}:
-          dependsOn: 
-          - ${{ each sourceDirectory in parameters.buildDirectories }}:
-            - Build_${{ sourceDirectory.name }}
-        ${{ if in(parameters.deployType, 'ADO') }}:
-          env:
-            AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
-        useTerraform: ${{ parameters.useTerraform }}
-        ${{ if in(parameters.deployType, 'LambdaService') }}:
-          preDeploySteps: 
-          - template: ${{ parameters.deployType }}/deploy.yml
-            parameters:
-              buildDirectories: ${{ parameters.buildDirectories }}
+    - ${{ if ne(parameters.buildDirectories, '') }}:
+      # multi-source build  
+      - ${{ each sourceDirectory in parameters.buildDirectories }}:
+        - template: helpers/container-job.yml
+          parameters: 
+            job: Validate_${{ sourceDirectory.name }}
+            displayName: Validate ${{ sourceDirectory.name }}
+            condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+            containerImage: ${{ sourceDirectory.image }}
+            steps:
+            - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
+              parameters:
+                directory: ${{ sourceDirectory.name }}
 
-    - template: Terraform/output-publish.yml
-      parameters:
-        useTerraform: ${{ parameters.useTerraform }}
+  - stage: Deploy
+    dependsOn:
+      - Validate
+    variables:
+      IS_INFRA_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isResourceChange'] ]
+      IS_OUPUT_CHANGE: $[ stageDependencies.Validate.Terraform.outputs['TerraformCondition.isOutputChange'] ]
+    jobs:
+    - ${{ if ne(parameters.useTerraform, false) }}:
+      - template: Terraform/deploy.yml
+        parameters:
+          ${{ if notIn(parameters.deployType, 'LambdaService') }}:
+            condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
+          ${{ if in(parameters.deployType, 'LambdaService') }}:
+            dependsOn: 
+            - ${{ each sourceDirectory in parameters.buildDirectories }}:
+              - Build_${{ sourceDirectory.name }}
+          ${{ if in(parameters.deployType, 'ADO') }}:
+            env:
+              AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
+          useTerraform: ${{ parameters.useTerraform }}
+          ${{ if in(parameters.deployType, 'LambdaService') }}:
+            preDeploySteps: 
+            - template: ${{ parameters.deployType }}/deploy.yml
+              parameters:
+                buildDirectories: ${{ parameters.buildDirectories }}
 
-  - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
-    # single-source build 
-    - template: helpers/container-job.yml
-      parameters: 
-        job: BuildSources
-        displayName: Build ${{ parameters.deployType }}
-        ${{ if ne(parameters.terraformOutputEnv, '') }}:
-          dependsOn: 
-          - Terraform
-          - PublishTFOutputs
-          condition: or(succeeded('Terraform'), succeeded('PublishTFOutputs'))
-        steps:
-        - template: ${{ parameters.deployType }}/build.yml
-          ${{ if ne(parameters.terraformOutputEnv, '') }}:
-            parameters:
-              terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+      - template: Terraform/output-publish.yml
+        parameters:
+          useTerraform: ${{ parameters.useTerraform }}
 
-  - ${{ if ne(parameters.buildDirectories, '') }}:
-    # multi-source build  
-    - ${{ each sourceDirectory in parameters.buildDirectories }}:
+    - ${{ if and(eq(parameters.buildDirectories, ''), ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
+      # single-source build 
       - template: helpers/container-job.yml
         parameters: 
-          job: Build_${{ sourceDirectory.name }}
-          displayName: Build ${{ sourceDirectory.name }}
+          job: BuildSources
+          displayName: Build ${{ parameters.deployType }}
           ${{ if ne(parameters.terraformOutputEnv, '') }}:
-            dependsOn: PublishTFOutputs
-            condition: succeeded('PublishTFOutputs')
-          containerImage: ${{ sourceDirectory.image }}
+            dependsOn: 
+            - Terraform
+            - PublishTFOutputs
+            condition: or(succeeded('Terraform'), succeeded('PublishTFOutputs'))
           steps:
-          - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
-            parameters:
-              directory: ${{ sourceDirectory.name }}
+          - template: ${{ parameters.deployType }}/build.yml
+            ${{ if ne(parameters.terraformOutputEnv, '') }}:
+              parameters:
+                terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
-  - ${{ if in(parameters.deployType, 'ReactApp') }}:
-    - deployment: DeployArtifacts
-      displayName: Deploy ${{ parameters.deployType }}
-      dependsOn: BuildSources
-      condition: succeeded('BuildSources')
+    - ${{ if ne(parameters.buildDirectories, '') }}:
+      # multi-source build  
+      - ${{ each sourceDirectory in parameters.buildDirectories }}:
+        - template: helpers/container-job.yml
+          parameters: 
+            job: Build_${{ sourceDirectory.name }}
+            displayName: Build ${{ sourceDirectory.name }}
+            ${{ if ne(parameters.terraformOutputEnv, '') }}:
+              dependsOn: PublishTFOutputs
+              condition: succeeded('PublishTFOutputs')
+            containerImage: ${{ sourceDirectory.image }}
+            steps:
+            - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
+              parameters:
+                directory: ${{ sourceDirectory.name }}
+
+    - ${{ if in(parameters.deployType, 'ReactApp') }}:
+      - deployment: DeployArtifacts
+        displayName: Deploy ${{ parameters.deployType }}
+        dependsOn: BuildSources
+        condition: succeeded('BuildSources')
+        environment: $(ENVIRONMENT_NAME)
+        strategy:
+          runOnce:
+            deploy:  
+              steps:
+              - template: ${{ parameters.deployType }}/deploy.yml
+                ${{ if ne(parameters.terraformOutputEnv, '') }}:
+                  parameters:
+                    terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+
+  - stage: Accept
+    jobs:
+    - deployment: NotifyClients
+      displayName: Notify Clients
       environment: $(ENVIRONMENT_NAME)
       strategy:
         runOnce:
           deploy:  
             steps:
-            - template: ${{ parameters.deployType }}/deploy.yml
-              ${{ if ne(parameters.terraformOutputEnv, '') }}:
-                parameters:
-                  terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
-
-- stage: Accept
-  jobs:
-  - deployment: NotifyClients
-    displayName: Notify Clients
-    environment: $(ENVIRONMENT_NAME)
-    strategy:
-      runOnce:
-        deploy:  
-          steps:
-          - checkout: none
-          - script: |
-              gql='mutation($input: CreateVersionInput!){ createVersion(input: $input){ createdAt } }'
-              payload=$(jq -ernc \
-                --arg gql "$gql" \
-                --arg buildId "$BUILD_BUILDID" \
-                --arg buildReason "$BUILD_REASON" \
-                --arg environmentName "$ENVIRONMENT_NAME" \
-                --arg initiatedBy "$BUILD_REQUESTEDFOREMAIL" \
-                --arg isScheduled "$SYSTEM_ISSCHEDULED" \
-                --arg pipelineName "$BUILD_DEFINITIONNAME" \
-                --arg projectName "$SYSTEM_TEAMPROJECT" \
-                --arg sourceBranch "$BUILD_SOURCEBRANCH" \
-                --arg VersionNumber "$VersionNumber" \
-                '{
-                  query: $gql, 
-                  variables: {
-                    input: {
-                      buildId: $buildId,
-                      buildReason: $buildReason,
-                      environmentName: $environmentName,
-                      initiatedBy: $initiatedBy,
-                      isScheduled: $isScheduled,
-                      pipelineName: $pipelineName,
-                      projectName: $projectName,
-                      sourceBranch: $sourceBranch,
-                      versionNumber: $VersionNumber
+            - checkout: none
+            - script: |
+                gql='mutation($input: CreateVersionInput!){ createVersion(input: $input){ createdAt } }'
+                payload=$(jq -ernc \
+                  --arg gql "$gql" \
+                  --arg buildId "$BUILD_BUILDID" \
+                  --arg buildReason "$BUILD_REASON" \
+                  --arg environmentName "$ENVIRONMENT_NAME" \
+                  --arg initiatedBy "$BUILD_REQUESTEDFOREMAIL" \
+                  --arg isScheduled "$SYSTEM_ISSCHEDULED" \
+                  --arg pipelineName "$BUILD_DEFINITIONNAME" \
+                  --arg projectName "$SYSTEM_TEAMPROJECT" \
+                  --arg sourceBranch "$BUILD_SOURCEBRANCH" \
+                  --arg VersionNumber "$VersionNumber" \
+                  '{
+                    query: $gql, 
+                    variables: {
+                      input: {
+                        buildId: $buildId,
+                        buildReason: $buildReason,
+                        environmentName: $environmentName,
+                        initiatedBy: $initiatedBy,
+                        isScheduled: $isScheduled,
+                        pipelineName: $pipelineName,
+                        projectName: $projectName,
+                        sourceBranch: $sourceBranch,
+                        versionNumber: $VersionNumber
+                      }
                     }
-                  }
-                }')
-              echo "##vso[task.setvariable variable=output;isOutput=true]${payload}"
-            name: Payload
-            displayName: Generate Payload
-            env:
-              VersionNumber: $(Build.BuildNumber) #TODO: replace with semantic version number
-          ## TODO: implement Release Update Service and invoke Mutate Lambda
-          # - task: LambdaInvokeFunction@1
-          #   name: UpdateAPI
-          #   inputs:
-          #     awsCredentials: $(AWS_SERVICE_CONNECTOR)
-          #     regionName: $(AWS_REGION)
-          #     functionName: testCICDUpdate
-          #     payload: $(Payload.output)
-          #     outputVariable: updateResult
-          # - script: echo $(updateResult)
-          #   displayName: Print Result
+                  }')
+                echo "##vso[task.setvariable variable=output;isOutput=true]${payload}"
+              name: Payload
+              displayName: Generate Payload
+              env:
+                VersionNumber: $(Build.BuildNumber) #TODO: replace with semantic version number
+            ## TODO: implement Release Update Service and invoke Mutate Lambda
+            # - task: LambdaInvokeFunction@1
+            #   name: UpdateAPI
+            #   inputs:
+            #     awsCredentials: $(AWS_SERVICE_CONNECTOR)
+            #     regionName: $(AWS_REGION)
+            #     functionName: testCICDUpdate
+            #     payload: $(Payload.output)
+            #     outputVariable: updateResult
+            # - script: echo $(updateResult)
+            #   displayName: Print Result
+
+- ${{ if eq(parameters.destroy, true) }}:
+  - stage: Destroy
+    displayName: 'WARNING: Destroy'
+    jobs:
+    - ${{ if ne(parameters.useTerraform, false) }}:
+      - template: Terraform/destroy.yml
+        parameters:
+          useTerraform: ${{ parameters.useTerraform }}
