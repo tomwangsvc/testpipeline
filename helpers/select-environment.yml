@@ -13,14 +13,30 @@ parameters:
   default: false
 
 variables:
-- ${{ if or(eq(parameters.chooseEnvironment, 'DEV'), and(eq(parameters.skipDEV, false), ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'PullRequest'))) }}:
-  - group: 'DEV'
+# auto-select target environment
+- ${{ if eq(parameters.chooseEnvironment, '(auto)') }}:
+  - ${{ if and(eq(parameters.skipDEV, false), ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'PullRequest')) }}:
+    - group: 'DEV'
 
-- ${{ if or(eq(parameters.chooseEnvironment, 'QA'), and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipDEV, true)))) }}:
-  - group: 'QA'
+  - ${{ if and(ne(variables['Build.SourceBranchName'], parameters.defaultBranchName), or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipDEV, true))) }}:
+    - group: 'QA'
 
-- ${{ if or(eq(parameters.chooseEnvironment, 'UAT'), and(eq(parameters.skipUAT, false), eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'Manual'))) }}:
-  - group: 'UAT'
+  - ${{ if and(eq(parameters.skipUAT, false), eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), ne(variables['Build.Reason'], 'Manual')) }}:
+    - group: 'UAT'
 
-- ${{ if or(eq(parameters.chooseEnvironment, 'PRD'), and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), or(eq(variables['Build.Reason'], 'Manual'), eq(parameters.skipUAT, true)))) }}:
-  - group: 'PRD'
+  - ${{ if and(eq(variables['Build.SourceBranchName'], parameters.defaultBranchName), or(eq(variables['Build.Reason'], 'Manual'), eq(parameters.skipUAT, true))) }}:
+    - group: 'PRD'
+
+# manually select environment
+- ${{ if ne(parameters.chooseEnvironment, '(auto)') }}:
+  - ${{ if eq(parameters.chooseEnvironment, 'DEV') }}:
+    - group: 'DEV'
+
+  - ${{ if eq(parameters.chooseEnvironment, 'QA') }}:
+    - group: 'QA'
+
+  - ${{ if eq(parameters.chooseEnvironment, 'UAT') }}:
+    - group: 'UAT'
+
+  - ${{ if eq(parameters.chooseEnvironment, 'PRD') }}:
+    - group: 'PRD'
