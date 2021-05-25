@@ -97,16 +97,24 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - template: helpers/container-job.yml
-          parameters: 
-            job: Validate_${{ sourceDirectory.name }}
+        - ${{ if eq(sourceDirectory.type, 'dockerfile') }}:
+          - job: Validate_${{ sourceDirectory.name }}
             displayName: Validate ${{ sourceDirectory.name }}
             condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-            containerImage: ${{ sourceDirectory.image }}
             steps:
             - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
-              parameters:
-                directory: ${{ sourceDirectory.name }}
+
+        - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
+          - template: helpers/container-job.yml
+            parameters: 
+              job: Validate_${{ sourceDirectory.name }}
+              displayName: Validate ${{ sourceDirectory.name }}
+              condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+              containerImage: ${{ sourceDirectory.image }}
+              steps:
+              - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
+                parameters:
+                  directory: ${{ sourceDirectory.name }}
 
   - stage: Deploy
     dependsOn:
@@ -158,18 +166,28 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - template: helpers/container-job.yml
-          parameters: 
-            job: Build_${{ sourceDirectory.name }}
+        - ${{ if eq(sourceDirectory.type, 'dockerfile') }}:
+          - job: Build_${{ sourceDirectory.name }}
             displayName: Build ${{ sourceDirectory.name }}
             ${{ if ne(parameters.terraformOutputEnv, '') }}:
               dependsOn: PublishTFOutputs
               condition: succeeded('PublishTFOutputs')
-            containerImage: ${{ sourceDirectory.image }}
             steps:
             - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
-              parameters:
-                directory: ${{ sourceDirectory.name }}
+
+        - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
+          - template: helpers/container-job.yml
+            parameters: 
+              job: Build_${{ sourceDirectory.name }}
+              displayName: Build ${{ sourceDirectory.name }}
+              ${{ if ne(parameters.terraformOutputEnv, '') }}:
+                dependsOn: PublishTFOutputs
+                condition: succeeded('PublishTFOutputs')
+              containerImage: ${{ sourceDirectory.image }}
+              steps:
+              - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
+                parameters:
+                  directory: ${{ sourceDirectory.name }}
 
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       - deployment: DeployArtifacts

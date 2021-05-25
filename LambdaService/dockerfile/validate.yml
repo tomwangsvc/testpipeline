@@ -1,0 +1,18 @@
+parameters:
+- name: directory
+  type: string
+
+steps:  
+- task: npmAuthenticate@0
+  inputs:
+    workingFile: '.npmrc'
+  workingDir: lambdas/${{ parameters.directory }}
+
+- task: Docker@2
+  inputs:
+    command: build
+    Dockerfile: '../../dockerfiles/lambda/nodejs/Dockerfile'
+    repository: ${{ parameters.directory }}
+    tags: latest
+    arguments: '--secret id=npmrc-package,src=.npmrc'
+  workingDir: lambdas/${{ parameters.directory }}
