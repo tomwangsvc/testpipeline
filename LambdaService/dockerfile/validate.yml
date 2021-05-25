@@ -15,7 +15,7 @@ steps:
     command: build
     buildContext: 'lambdas/${{ parameters.directory }}'
     Dockerfile: 'dockerfiles/lambda/nodejs/Dockerfile'
-    repository: ${{ parameters.directory }}
+    repository: ${{ lower(parameters.directory) }}
     tags: latest
     arguments: '--secret id=npmrc-package,src=lambdas/${{ parameters.directory }}/.npmrc'
   env:
