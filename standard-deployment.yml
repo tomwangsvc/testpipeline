@@ -103,6 +103,8 @@ stages:
             condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
             steps:
             - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
+              parameters:
+                directory: ${{ sourceDirectory.name }}
 
         - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
           - template: helpers/container-job.yml
@@ -174,6 +176,8 @@ stages:
               condition: succeeded('PublishTFOutputs')
             steps:
             - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
+              parameters:
+                directory: ${{ sourceDirectory.name }}
 
         - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
           - template: helpers/container-job.yml
