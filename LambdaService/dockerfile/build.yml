@@ -27,7 +27,7 @@ steps:
     regionName: $(AWS_REGION)
     imageSource: 'imagename'
     sourceImageName: ${{ parameters.directory }}
-    repositoryName: ${{ parameters.directory }}
+    repositoryName: ${{ lower(parameters.directory) }}
     autoCreateRepository: true
     forceDockerNamingConventions: true
     outputVariable: 'image_output'
