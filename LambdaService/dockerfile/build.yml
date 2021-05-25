@@ -26,6 +26,7 @@ steps:
     awsCredentials: 'ado-cicd-aws-dev'
     regionName: 'ap-southeast-2'
     imageSource: 'imagename'
+    sourceImageName: '${{ parameters.directory }}:latest'
     repositoryName: ${{ parameters.directory }}
     autoCreateRepository: true
     forceDockerNamingConventions: true
