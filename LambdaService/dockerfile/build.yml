@@ -13,6 +13,7 @@ steps:
 - task: Docker@2
   inputs:
     command: build
+    buildContext: 'lambdas/${{ parameters.directory }}'
     Dockerfile: 'dockerfiles/lambda/nodejs/Dockerfile'
     repository: ${{ parameters.directory }}
     tags: latest
