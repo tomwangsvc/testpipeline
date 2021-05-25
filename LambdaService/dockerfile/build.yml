@@ -3,6 +3,9 @@ parameters:
   type: string
 
 steps:  
+- checkout: self
+  submodules: true
+  
 - task: npmAuthenticate@0
   inputs:
     workingFile: 'lambdas/${{ parameters.directory }}/.npmrc'
