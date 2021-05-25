@@ -100,9 +100,9 @@ stages:
         - job: Validate_${{ sourceDirectory.path }}
           displayName: Validate ${{ sourceDirectory.path }}
           condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.image, 'Dockerfile'))) }}:
+          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
             container: 
-              image: ${{ sourceDirectory.image }}  
+              image: ${{ sourceDirectory.buildImage }}  
           steps:
           - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/validate.yml
             parameters:
@@ -163,9 +163,9 @@ stages:
           ${{ if ne(parameters.terraformOutputEnv, '') }}:
             dependsOn: PublishTFOutputs
             condition: succeeded('PublishTFOutputs')
-          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.image, 'Dockerfile'))) }}:
+          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
             container: 
-              image: ${{ sourceDirectory.image }}
+              image: ${{ sourceDirectory.buildImage }}
           steps:
           - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/build.yml
             parameters:
