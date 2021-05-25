@@ -104,7 +104,7 @@ stages:
             container: 
               image: ${{ sourceDirectory.image }}  
           steps:
-          - template: ${{ parameters.deployType }}/${{ sourceDirectory.packageAs }}/validate.yml
+          - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/validate.yml
             parameters:
               directory: ${{ sourceDirectory.path }}
 
@@ -167,7 +167,7 @@ stages:
             container: 
               image: ${{ sourceDirectory.image }}
           steps:
-          - template: ${{ parameters.deployType }}/${{ sourceDirectory.packageAs }}/build.yml
+          - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/build.yml
             parameters:
               directory: ${{ sourceDirectory.path }}
 
