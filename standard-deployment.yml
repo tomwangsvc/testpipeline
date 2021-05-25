@@ -97,26 +97,15 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - ${{ if eq(sourceDirectory.type, 'dockerfile') }}:
-          - job: Validate_${{ sourceDirectory.name }}
-            displayName: Validate ${{ sourceDirectory.name }}
-            condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-            steps:
-            - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
-              parameters:
-                directory: ${{ sourceDirectory.name }}
-
-        - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
-          - template: helpers/container-job.yml
-            parameters: 
-              job: Validate_${{ sourceDirectory.name }}
-              displayName: Validate ${{ sourceDirectory.name }}
-              condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-              containerImage: ${{ sourceDirectory.image }}
-              steps:
-              - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
-                parameters:
-                  directory: ${{ sourceDirectory.name }}
+        - job: Validate_${{ sourceDirectory.path }}
+          displayName: Validate ${{ sourceDirectory.path }}
+          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.image, 'Dockerfile'))) }}:
+            containerImage: ${{ sourceDirectory.image }}  
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.packageAs }}/validate.yml
+            parameters:
+              directory: ${{ sourceDirectory.path }}
 
   - stage: Deploy
     dependsOn:
@@ -168,30 +157,17 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - ${{ if eq(sourceDirectory.type, 'dockerfile') }}:
-          - job: Build_${{ sourceDirectory.name }}
-            displayName: Build ${{ sourceDirectory.name }}
-            ${{ if ne(parameters.terraformOutputEnv, '') }}:
-              dependsOn: PublishTFOutputs
-              condition: succeeded('PublishTFOutputs')
-            steps:
-            - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
-              parameters:
-                directory: ${{ sourceDirectory.name }}
-
-        - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
-          - template: helpers/container-job.yml
-            parameters: 
-              job: Build_${{ sourceDirectory.name }}
-              displayName: Build ${{ sourceDirectory.name }}
-              ${{ if ne(parameters.terraformOutputEnv, '') }}:
-                dependsOn: PublishTFOutputs
-                condition: succeeded('PublishTFOutputs')
-              containerImage: ${{ sourceDirectory.image }}
-              steps:
-              - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
-                parameters:
-                  directory: ${{ sourceDirectory.name }}
+        - job: Build_${{ sourceDirectory.path }}
+          displayName: Build ${{ sourceDirectory.path }}
+          ${{ if ne(parameters.terraformOutputEnv, '') }}:
+            dependsOn: PublishTFOutputs
+            condition: succeeded('PublishTFOutputs')
+          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.image, 'Dockerfile'))) }}:
+            containerImage: ${{ sourceDirectory.image }}  
+          steps:
+          - template: ${{ parameters.deployType }}/${{ sourceDirectory.packageAs }}/build.yml
+            parameters:
+              directory: ${{ sourceDirectory.path }}
 
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       - deployment: DeployArtifacts
