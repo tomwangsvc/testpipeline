@@ -26,7 +26,7 @@ steps:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: $(AWS_REGION)
     imageSource: 'imagename'
-    sourceImageName: ${{ parameters.directory }}
+    sourceImageName: ${{ lower(parameters.directory) }}
     repositoryName: ${{ lower(parameters.directory) }}
     autoCreateRepository: true
     forceDockerNamingConventions: true
