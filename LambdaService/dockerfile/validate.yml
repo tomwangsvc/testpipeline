@@ -18,3 +18,5 @@ steps:
     repository: ${{ parameters.directory }}
     tags: latest
     arguments: '--secret id=npmrc-package,src=.npmrc'
+  env:
+    DOCKER_BUILDKIT: 1
