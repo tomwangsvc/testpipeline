@@ -5,17 +5,15 @@ parameters:
 steps:  
 - task: npmAuthenticate@0
   inputs:
-    workingFile: '.npmrc'
-  workingDirectory: lambdas/${{ parameters.directory }}
+    workingFile: 'lambdas/${{ parameters.directory }}/.npmrc'
 
 - task: Docker@2
   inputs:
     command: build
-    Dockerfile: '../../dockerfiles/lambda/nodejs/Dockerfile'
+    Dockerfile: 'dockerfiles/lambda/nodejs/Dockerfile'
     repository: ${{ parameters.directory }}
     tags: latest
     arguments: '--secret id=npmrc-package,src=.npmrc'
-  workingDirectory: lambdas/${{ parameters.directory }}
 
 - task: ECRPushImage@1
   inputs:
