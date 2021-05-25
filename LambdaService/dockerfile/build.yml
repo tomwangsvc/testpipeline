@@ -23,10 +23,10 @@ steps:
 
 - task: ECRPushImage@1
   inputs:
-    awsCredentials: 'ado-cicd-aws-dev'
-    regionName: 'ap-southeast-2'
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
     imageSource: 'imagename'
-    sourceImageName: '${{ parameters.directory }}:latest'
+    sourceImageName: ${{ parameters.directory }}
     repositoryName: ${{ parameters.directory }}
     autoCreateRepository: true
     forceDockerNamingConventions: true
