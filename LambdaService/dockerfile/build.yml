@@ -6,7 +6,7 @@ steps:
 - task: npmAuthenticate@0
   inputs:
     workingFile: '.npmrc'
-  workingDir: lambdas/${{ parameters.directory }}
+  workingDirectory: lambdas/${{ parameters.directory }}
 
 - task: Docker@2
   inputs:
@@ -15,7 +15,7 @@ steps:
     repository: ${{ parameters.directory }}
     tags: latest
     arguments: '--secret id=npmrc-package,src=.npmrc'
-  workingDir: lambdas/${{ parameters.directory }}
+  workingDirectory: lambdas/${{ parameters.directory }}
 
 - task: ECRPushImage@1
   inputs:
