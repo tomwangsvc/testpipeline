@@ -101,7 +101,8 @@ stages:
           displayName: Validate ${{ sourceDirectory.path }}
           condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
           ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.image, 'Dockerfile'))) }}:
-            containerImage: ${{ sourceDirectory.image }}  
+            container: 
+              image: ${{ sourceDirectory.image }}  
           steps:
           - template: ${{ parameters.deployType }}/${{ sourceDirectory.packageAs }}/validate.yml
             parameters:
@@ -163,7 +164,8 @@ stages:
             dependsOn: PublishTFOutputs
             condition: succeeded('PublishTFOutputs')
           ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.image, 'Dockerfile'))) }}:
-            containerImage: ${{ sourceDirectory.image }}  
+            container: 
+              image: ${{ sourceDirectory.image }}
           steps:
           - template: ${{ parameters.deployType }}/${{ sourceDirectory.packageAs }}/build.yml
             parameters:
