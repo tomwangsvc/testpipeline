@@ -97,8 +97,8 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - job: Validate_${{ sourceDirectory.path }}
-          displayName: Validate ${{ sourceDirectory.path }}
+        - job: Validate_${{ replace(sourceDirectory.path, '/', '_') }}
+          displayName: Validate ${{ replace(sourceDirectory.path, '/', '_') }}
           condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
           ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
             container: 
@@ -158,8 +158,8 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - job: Build_${{ sourceDirectory.path }}
-          displayName: Build ${{ sourceDirectory.path }}
+        - job: Build_${{ replace(sourceDirectory.path, '/', '_') }}
+          displayName: Build ${{ replace(sourceDirectory.path, '/', '_') }}
           ${{ if ne(parameters.terraformOutputEnv, '') }}:
             dependsOn: PublishTFOutputs
             condition: succeeded('PublishTFOutputs')
