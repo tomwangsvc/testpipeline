@@ -47,7 +47,7 @@ steps:
   displayName: Authenticate NPM
   condition: ne(ConfigureBuild.npmrcPath, '')
   inputs:
-    workingFile: '${{ parameters.directory }}/.npmrc'
+    workingFile: $(ConfigureBuild.npmrcPath)
 
 - task: Docker@2
   displayName: Docker Build
