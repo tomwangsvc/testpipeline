@@ -163,7 +163,6 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - ${{ each sourceDirectory in parameters.buildDirectories }}:
         - ${{ if or(eq(sourceDirectory.packageAs, 'image'), endsWith(sourceDirectory.buildImage, 'Dockerfile')) }}:
           - template: Docker/deploy.yml
             parameters:
