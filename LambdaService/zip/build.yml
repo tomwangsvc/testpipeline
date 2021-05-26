@@ -13,7 +13,7 @@ steps:
   displayName: Zip ${{ parameters.directory }}
   workingDirectory: ${{ parameters.directory }}
   env:
-    lambdaName: ${{ replace(sourceDirectory.path, '/', '_') }} 
+    lambdaName: ${{ replace(parameters.directory, '/', '_') }} 
     stagingDir: $(Build.ArtifactStagingDirectory)
 
 - publish: $(Build.ArtifactStagingDirectory)

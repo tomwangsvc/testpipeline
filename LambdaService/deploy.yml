@@ -9,7 +9,7 @@ steps:
 - ${{ each sourceDirectory in parameters.buildDirectories }}:
   - ${{ if ne(sourceDirectory.packageAs, 'image') }}:
     - download: current
-      artifact: ${{ replace(sourceDirectory.path, '/', '_')}}
+      artifact: ${{ replace(sourceDirectory.path, '/', '_') }}
       displayName: Get ${{ sourceDirectory.path }} Artifact
 
     - script: mv $(Pipeline.Workspace)/${{ sourceDirectory.path }}/* terraform/build
