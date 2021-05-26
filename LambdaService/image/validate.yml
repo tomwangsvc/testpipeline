@@ -1,10 +1,23 @@
 parameters:
 - name: directory
   type: string
+- name: dockerfilePath
+  type: string
+  default: './Dockerfile'
 
 steps:  
 - checkout: self
   submodules: true
+
+- script: |
+    runtime=$(grep -Po 'FROM \K[^:]*' $dockerfilePath | xargs -L 1 basename)
+    echo "##vso[task.setvariable variable=value;isOutput=true]${runtime}"
+    echo "RUNTIME: ${runtime}"
+    echo "PATH: ${dockerfilePath}"
+  displayName: Get Runtime
+  name: GetRuntime
+  env:
+    dockerfilePath: '${{ parameters.directory }}/${{ parameters.dockerfilePath }}'
 
 - task: npmAuthenticate@0
   inputs:
