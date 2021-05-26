@@ -107,7 +107,7 @@ stages:
           - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/validate.yml
             parameters:
               directory: ${{ sourceDirectory.path }}
-              dockerfilePath: ${{ sourceDirectory.buildImage }}
+              buildImage: ${{ sourceDirectory.buildImage }}
 
   - stage: Deploy
     dependsOn:

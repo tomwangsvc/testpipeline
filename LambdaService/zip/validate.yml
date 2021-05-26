@@ -1,6 +1,8 @@
 parameters:
 - name: directory
   type: string
+- name: buildImage
+  type: string
 
 steps:  
 - task: Npm@1

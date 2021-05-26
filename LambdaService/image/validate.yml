@@ -1,7 +1,7 @@
 parameters:
 - name: directory
   type: string
-- name: dockerfilePath
+- name: buildImage
   type: string
   default: './Dockerfile'
 
