@@ -17,7 +17,7 @@ steps:
   displayName: Get Runtime
   name: GetRuntime
   env:
-    dockerfilePath: '${{ parameters.directory }}/${{ parameters.dockerfilePath }}'
+    dockerfilePath: '${{ parameters.directory }}/${{ parameters.buildImage }}'
 
 - task: npmAuthenticate@0
   inputs:
