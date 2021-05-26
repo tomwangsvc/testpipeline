@@ -28,11 +28,11 @@ jobs:
   ${{ if eq(parameters.config, '') }}:
     dependsOn: Configure_${{ replace(parameters.directory, '/', '_') }}
   variables:
-    BUILD_ARGUMENTS: $[ coalesce(${{ parameters.config.buildArguments }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
-    DOCKERFILE_PATH: $[ coalesce(${{ parameters.config.dockerfilePath }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
-    NPMRC_PATH: $[ coalesce(${{ parameters.config.npmrcPath }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
-    REPO_NAME: $[ coalesce(${{ parameters.config.repoName }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.repoName'], '') ]
-    RUNTIME: $[ coalesce(${{ parameters.config.runtime }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
+    BUILD_ARGUMENTS: $[ coalesce('${{ parameters.config.buildArguments }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
+    DOCKERFILE_PATH: $[ coalesce('${{ parameters.config.dockerfilePath }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
+    NPMRC_PATH: $[ coalesce('${{ parameters.config.npmrcPath }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
+    REPO_NAME: $[ coalesce('${{ parameters.config.repoName }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.repoName'], '') ]
+    RUNTIME: $[ coalesce('${{ parameters.config.runtime }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
   steps:
   - checkout: self
     submodules: true
