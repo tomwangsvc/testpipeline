@@ -45,7 +45,7 @@ steps:
 
 - task: npmAuthenticate@0
   displayName: Authenticate NPM
-  condition: ne(ConfigureBuild.npmrcPath, '')
+  condition: ne(variables.ConfigureBuild.npmrcPath, '')
   inputs:
     workingFile: $(ConfigureBuild.npmrcPath)
 
