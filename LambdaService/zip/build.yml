@@ -7,15 +7,15 @@ steps:
   displayName: Install ${{ parameters.directory }}
   inputs:
     command: install
-    workingDir: lambdas/${{ parameters.directory }}
+    workingDir: ${{ parameters.directory }}
 
 - script: zip -r "${stagingDir}/${lambdaName}.zip" .
   displayName: Zip ${{ parameters.directory }}
-  workingDirectory: lambdas/${{ parameters.directory }}
+  workingDirectory: ${{ parameters.directory }}
   env:
     lambdaName: ${{ parameters.directory }} 
     stagingDir: $(Build.ArtifactStagingDirectory)
 
 - publish: $(Build.ArtifactStagingDirectory)
-  artifact: lambda-${{ parameters.directory }}
+  artifact: ${{ parameters.directory }}
   displayName: Publish ${{ parameters.directory }}

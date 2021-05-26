@@ -7,8 +7,8 @@ steps:
   displayName: Install ${{ parameters.directory }}
   inputs:
     command: install
-    workingDir: lambdas/${{ parameters.directory }}
+    workingDir: ${{ parameters.directory }}
 
 - script: npm test
   displayName: Unit Test ${{ parameters.directory }}
-  workingDirectory: lambdas/${{ parameters.directory }}
+  workingDirectory: ${{ parameters.directory }}

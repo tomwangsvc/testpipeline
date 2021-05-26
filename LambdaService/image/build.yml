@@ -8,16 +8,16 @@ steps:
   
 - task: npmAuthenticate@0
   inputs:
-    workingFile: 'lambdas/${{ parameters.directory }}/.npmrc'
+    workingFile: '${{ parameters.directory }}/.npmrc'
 
 - task: Docker@2
   inputs:
     command: build
-    buildContext: 'lambdas/${{ parameters.directory }}'
+    buildContext: '${{ parameters.directory }}'
     Dockerfile: 'dockerfiles/lambda/nodejs/Dockerfile'
     repository: ${{ lower(parameters.directory) }}
     tags: latest
-    arguments: '--secret id=npmrc-package,src=lambdas/${{ parameters.directory }}/.npmrc'
+    arguments: '--secret id=npmrc-package,src=${{ parameters.directory }}/.npmrc'
   env:
     DOCKER_BUILDKIT: 1
 
