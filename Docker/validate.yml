@@ -1,0 +1,13 @@
+parameters:
+- name: directory
+  type: string
+- name: buildImage
+  type: string
+  default: ''
+
+jobs:
+- template: build.yml
+  parameters:
+    directory: ${{ parameters.directory }}
+    buildImage: ${{ parameters.buildImage }}
+    condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')

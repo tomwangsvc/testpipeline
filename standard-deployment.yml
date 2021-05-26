@@ -97,17 +97,23 @@ stages:
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
       - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - job: Validate_${{ replace(sourceDirectory.path, '/', '_') }}
-          displayName: Validate ${{ replace(sourceDirectory.path, '/', '_') }}
-          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-          ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
-            container: 
-              image: ${{ sourceDirectory.buildImage }}  
-          steps:
-          - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/validate.yml
+        ${{ if or(eq(sourceDirectory.packageAs, 'image'), endsWith(sourceDirectory.buildImage, 'Dockerfile')) }}:
+          - template: Docker/validate.yml
             parameters:
               directory: ${{ sourceDirectory.path }}
               buildImage: ${{ sourceDirectory.buildImage }}
+              
+        ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
+          - job: Validate_${{ replace(sourceDirectory.path, '/', '_') }}
+            displayName: Validate ${{ replace(sourceDirectory.path, '/', '_') }}
+            condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+            container: 
+              image: ${{ sourceDirectory.buildImage }}  
+            steps:
+            - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/validate.yml
+              parameters:
+                directory: ${{ sourceDirectory.path }}
+                buildImage: ${{ sourceDirectory.buildImage }}
 
   - stage: Deploy
     dependsOn:

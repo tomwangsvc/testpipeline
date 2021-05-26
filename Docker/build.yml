@@ -1,0 +1,68 @@
+parameters:
+- name: directory
+  type: string
+- name: buildImage
+  type: string
+  default: ''
+- name: config
+  type: object
+  default: ''
+- name: pushImage
+  type: boolean
+  default: false
+- name: condition
+  type: string
+  default: ''
+
+jobs:
+- ${{ if eq(parameters.config, '') }}:
+  - template: configure.yml
+    parameters:
+      directory: ${{ parameters.directory }}
+      buildImage: ${{ parameters.buildImage }}
+
+- job: Build_${{ replace(parameters.directory, '/', '_') }}
+  displayName: Build ${{ replace(parameters.directory, '/', '_') }}
+  ${{ if ne(parameters.condition, '') }}:
+    condition: ${{ parameters.condition }}
+  ${{ if eq(parameters.config, '') }}:
+    dependsOn: Configure_${{ replace(parameters.directory, '/', '_') }}
+  variables:
+    BUILD_ARGUMENTS: $[ coalesce(${{ parameters.config.buildArguments }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
+    DOCKERFILE_PATH: $[ coalesce(${{ parameters.config.dockerfilePath }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
+    NPMRC_PATH: $[ coalesce(${{ parameters.config.npmrcPath }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
+    REPO_NAME: $[ coalesce(${{ parameters.config.repoName }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.repoName'], '') ]
+    RUNTIME: $[ coalesce(${{ parameters.config.runtime }}, dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
+  steps:
+  - checkout: self
+    submodules: true
+
+  - task: npmAuthenticate@0
+    displayName: Authenticate NPM
+    condition: and(succeeded(), ne(variables.NPMRC_PATH, ''))
+    inputs:
+      workingFile: $(ConfigureBuild.npmrcPath)
+
+  - task: Docker@2
+    displayName: Docker Build
+    inputs:
+      command: build
+      buildContext: ${{ parameters.directory }}
+      Dockerfile: $(DOCKERFILE_PATH)
+      repository: $(REPO_NAME)
+      tags: latest
+      arguments: $(BUILD_ARGUMENTS)
+    env:
+      DOCKER_BUILDKIT: 1
+  
+  - ${{ if eq(parameters.pushImage, true) }}:
+    - task: ECRPushImage@1
+      inputs:
+        awsCredentials: $(AWS_SERVICE_CONNECTOR)
+        regionName: $(AWS_REGION)
+        imageSource: 'imagename'
+        sourceImageName: $(REPO_NAME)
+        repositoryName: $(REPO_NAME)
+        autoCreateRepository: true
+        forceDockerNamingConventions: true
+        outputVariable: image_output
