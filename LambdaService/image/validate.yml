@@ -44,10 +44,13 @@ steps:
     sourcePath: ${{ parameters.directory }}
 
 - task: npmAuthenticate@0
+  displayName: Authenticate NPM
+  condition: ne(ConfigureBuild.npmrcPath, '')
   inputs:
     workingFile: '${{ parameters.directory }}/.npmrc'
 
 - task: Docker@2
+  displayName: Docker Build
   inputs:
     command: build
     buildContext: ${{ parameters.directory }}
