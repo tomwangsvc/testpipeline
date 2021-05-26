@@ -123,7 +123,7 @@ stages:
           ${{ if in(parameters.deployType, 'LambdaService') }}:
             dependsOn: 
             - ${{ each sourceDirectory in parameters.buildDirectories }}:
-              - Build_${{ sourceDirectory.name }}
+              - Build_${{ replace(sourceDirectory.path, '/', '_') }}
           ${{ if in(parameters.deployType, 'ADO') }}:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
