@@ -7,10 +7,10 @@ steps:
   displayName: Make Lambda .zip Directory
 
 - ${{ each sourceDirectory in parameters.buildDirectories }}:
-  - ${{ if ne(sourceDirectory.type, 'dockerfile') }}:
+  - ${{ if ne(sourceDirectory.packageAs, 'image') }}:
     - download: current
-      artifact: lambda-${{ sourceDirectory.name }}
-      displayName: Get ${{ sourceDirectory.name }} Artifact
+      artifact: ${{ sourceDirectory.path }}
+      displayName: Get ${{ sourceDirectory.path }} Artifact
 
-    - script: mv $(Pipeline.Workspace)/lambda-${{ sourceDirectory.name }}/* terraform/build
-      displayName: Stage ${{ sourceDirectory.name }} Artifact
+    - script: mv $(Pipeline.Workspace)/${{ sourceDirectory.path }}/* terraform/build
+      displayName: Stage ${{ sourceDirectory.path }} Artifact
