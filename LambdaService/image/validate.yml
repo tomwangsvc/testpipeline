@@ -13,6 +13,7 @@ steps:
     runtime=$(grep -Po 'FROM \K[^:]*' $dockerfilePath | xargs -L 1 basename)
     echo "Setting Runtime: ${runtime}"
     echo "##vso[task.setvariable variable=value;isOutput=true]${runtime}"
+    echo $dockerfilePath
   displayName: Get Runtime
   name: GetRuntime
   env:
