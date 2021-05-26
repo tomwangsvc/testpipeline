@@ -13,6 +13,9 @@ parameters:
 - name: condition
   type: string
   default: ''
+- name: jobNamePrefix
+  type: string
+  default: 'Build'
 
 jobs:
 - ${{ if eq(parameters.config, '') }}:
@@ -21,8 +24,8 @@ jobs:
       directory: ${{ parameters.directory }}
       buildImage: ${{ parameters.buildImage }}
 
-- job: Build_${{ replace(parameters.directory, '/', '_') }}
-  displayName: Build ${{ replace(parameters.directory, '/', '_') }}
+- job: ${{ parameters.jobNamePrefix }}_${{ replace(parameters.directory, '/', '_') }}
+  displayName: ${{ parameters.jobNamePrefix }} ${{ replace(parameters.directory, '/', '_') }}
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
   ${{ if eq(parameters.config, '') }}:
@@ -57,6 +60,7 @@ jobs:
   
   - ${{ if eq(parameters.pushImage, true) }}:
     - task: ECRPushImage@1
+      displayName: Push to ECR
       inputs:
         awsCredentials: $(AWS_SERVICE_CONNECTOR)
         regionName: $(AWS_REGION)
