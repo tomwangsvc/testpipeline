@@ -41,7 +41,7 @@ jobs:
     displayName: Authenticate NPM
     condition: and(succeeded(), ne(variables.NPMRC_PATH, ''))
     inputs:
-      workingFile: $(ConfigureBuild.npmrcPath)
+      workingFile: $(NPMRC_PATH)
 
   - task: Docker@2
     displayName: Docker Build
