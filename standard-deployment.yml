@@ -101,10 +101,11 @@ stages:
             parameters:
               directory: ${{ definition.value.path }}
               buildImage: ${{ definition.value.buildImage }}
+              repoName: ${{ definition.key }}
               
         - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
-          - job: Validate_${{ replace(definition.value.path, '/', '_') }}
-            displayName: Validate ${{ replace(definition.value.path, '/', '_') }}
+          - job: Validate_${{ definition.key }}
+            displayName: Validate ${{ definition.key }}
             condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
             container: 
               image: ${{ definition.value.buildImage }}  
@@ -127,7 +128,7 @@ stages:
           ${{ if ne(parameters.buildDirectories, '') }}:
             dependsOn: 
             - ${{ each definition in parameters.buildDirectories }}:
-              - Build_${{ replace(definition.value.path, '/', '_') }}
+              - Build_${{ definition.key }}
           ${{ if in(parameters.deployType, 'ADO') }}:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
@@ -167,10 +168,11 @@ stages:
             parameters:
               directory: ${{ definition.value.path }}
               buildImage: ${{ definition.value.buildImage }}
+              repoName: ${{ definition.key }}
               
         - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
-          - job: Build_${{ replace(definition.value.path, '/', '_') }}
-            displayName: Build ${{ replace(definition.value.path, '/', '_') }}
+          - job: Build_${{ definition.key }}
+            displayName: Build ${{ definition.key }}
             ${{ if ne(parameters.terraformOutputEnv, '') }}:
               dependsOn: PublishTFOutputs
               condition: succeeded('PublishTFOutputs')
