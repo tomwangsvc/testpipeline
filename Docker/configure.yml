@@ -8,7 +8,7 @@ parameters:
   type: string
 
 jobs:
-- job: Configure_${{ parameters.repoName }}
+- job: Configure_${{ replace(parameters.repoName, '-', '_') }}
   displayName: Configure ${{ parameters.repoName }}
   steps:
   - checkout: self

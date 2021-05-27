@@ -24,7 +24,7 @@ jobs:
       dockerfilePath: ${{ parameters.dockerfilePath }}
       repoName: ${{ parameters.repoName }}
 
-- job: Build_${{ parameters.repoName }}
+- job: Build_${{ replace(parameters.repoName, '-', '_') }}
   displayName: Build ${{ parameters.repoName }}
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
