@@ -110,7 +110,7 @@ stages:
             container: 
               image: ${{ definition.value.buildImage }}  
             steps:
-            - template: ${{ parameters.deployType }}/${{ coalesce(definition.value.packageAs, 'zip') }}/validate.yml
+            - template: ${{ coalesce(definition.value.packageAs, 'zip') }}/validate.yml
               parameters:
                 directory: ${{ definition.value.path }}
 
@@ -179,7 +179,7 @@ stages:
             container: 
               image: ${{ definition.value.buildImage }}  
             steps:
-            - template: ${{ parameters.deployType }}/${{ coalesce(definition.value.packageAs, 'zip') }}/build.yml
+            - template: ${{ coalesce(definition.value.packageAs, 'zip') }}/build.yml
               parameters:
                 directory: ${{ definition.value.path }}
 

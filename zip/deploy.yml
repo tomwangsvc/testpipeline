@@ -1,0 +1,15 @@
+parameters:
+- name: buildDirectories
+  type: object
+
+steps:
+- script: mkdir -p terraform/build/
+  displayName: Make Lambda .zip Directory
+
+- ${{ each sourceDirectory in parameters.buildDirectories }}:
+  - download: current
+    artifact: ${{ replace(sourceDirectory.path, '/', '_') }}
+    displayName: Get ${{ replace(sourceDirectory.path, '/', '_') }} Artifact
+
+  - script: mv $(Pipeline.Workspace)/${{ replace(sourceDirectory.path, '/', '_') }}/* terraform/build
+    displayName: Stage ${{ replace(sourceDirectory.path, '/', '_') }} Artifact
