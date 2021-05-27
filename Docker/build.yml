@@ -34,7 +34,6 @@ jobs:
     BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.buildArguments'], '') ]
     DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
     NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
-    REPO_NAME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.repoName' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.repoName'], '') ]
     RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.runtime'], '') ]
   steps:
   - checkout: self
@@ -52,7 +51,7 @@ jobs:
       command: build
       buildContext: ${{ parameters.buildContext }}
       Dockerfile: $(DOCKERFILE_PATH)
-      repository: $(REPO_NAME)
+      repository: ${{ parameters.repoName }}
       tags: latest
       arguments: $(BUILD_ARGUMENTS)
     env:
@@ -65,8 +64,8 @@ jobs:
         awsCredentials: $(AWS_SERVICE_CONNECTOR)
         regionName: $(AWS_REGION)
         imageSource: 'imagename'
-        sourceImageName: $(REPO_NAME)
-        repositoryName: $(REPO_NAME)
+        sourceImageName: ${{ parameters.repoName }}
+        repositoryName: ${{ parameters.repoName }}
         autoCreateRepository: true
         forceDockerNamingConventions: true
         outputVariable: image_output
