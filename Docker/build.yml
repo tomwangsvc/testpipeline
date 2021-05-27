@@ -29,12 +29,12 @@ jobs:
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
   ${{ if eq(parameters.useStageConfig, '') }}:
-    dependsOn: Configure_${{ parameters.repoName }}
+    dependsOn: Configure_${{ replace(parameters.repoName, '-', '_') }}
   variables:
-    BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.buildArguments'], '') ]
-    DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
-    NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
-    RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.runtime'], '') ]
+    BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
+    DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
+    NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
+    RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
   steps:
   - checkout: self
     submodules: true
