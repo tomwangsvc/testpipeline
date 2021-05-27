@@ -11,5 +11,5 @@ jobs:
     directory: ${{ parameters.directory }}
     buildImage: ${{ parameters.buildImage }}
     pushImage: true
-    jobNamePrefix: Deploy
+    jobNamePrefix: Build
     useStageConfig: Validate
