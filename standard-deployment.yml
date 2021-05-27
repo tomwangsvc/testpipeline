@@ -25,7 +25,6 @@ parameters:
   - 'null'
   - ADO
   - ReactApp
-  - LambdaService
 # set terraform output variables to environment variables
 - name: terraformOutputEnv
   type: object
@@ -74,7 +73,7 @@ stages:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
-    - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:
+    - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
       # Identify the docker image for later stages
       - job: GetContainerImage
         displayName: Container Image
@@ -125,7 +124,7 @@ stages:
       - template: Terraform/deploy.yml
         parameters:
           condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
-          ${{ if in(parameters.deployType, 'LambdaService') }}:
+          ${{ if ne(parameters.buildDirectories, '') }}:
             dependsOn: 
             - ${{ each sourceDirectory in parameters.buildDirectories }}:
               - Build_${{ replace(sourceDirectory.path, '/', '_') }}
@@ -133,11 +132,11 @@ stages:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
           useTerraform: ${{ parameters.useTerraform }}
-          ${{ if in(parameters.deployType, 'LambdaService') }}:
-            preDeploySteps: 
-            - template: ${{ parameters.deployType }}/deploy.yml
-              parameters:
-                buildDirectories: ${{ parameters.buildDirectories }}
+          # ${{ if in(parameters.deployType, 'LambdaService') }}:
+          #   preDeploySteps: 
+          #   - template: ${{ parameters.deployType }}/deploy.yml
+          #     parameters:
+          #       buildDirectories: ${{ parameters.buildDirectories }}
 
       - template: Terraform/output-publish.yml
         parameters:
