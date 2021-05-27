@@ -95,23 +95,23 @@ stages:
 
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
-      - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - ${{ if or(eq(sourceDirectory.packageAs, 'image'), endsWith(sourceDirectory.buildImage, 'Dockerfile')) }}:
+      - ${{ each definition in parameters.buildDirectories }}:
+        - ${{ if or(eq(definition.value.packageAs, 'image'), endsWith(definition.value.buildImage, 'Dockerfile')) }}:
           - template: Docker/validate.yml
             parameters:
-              directory: ${{ sourceDirectory.path }}
-              buildImage: ${{ sourceDirectory.buildImage }}
+              directory: ${{ definition.value.path }}
+              buildImage: ${{ definition.value.buildImage }}
               
-        - ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
-          - job: Validate_${{ replace(sourceDirectory.path, '/', '_') }}
-            displayName: Validate ${{ replace(sourceDirectory.path, '/', '_') }}
+        - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
+          - job: Validate_${{ replace(definition.value.path, '/', '_') }}
+            displayName: Validate ${{ replace(definition.value.path, '/', '_') }}
             condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
             container: 
-              image: ${{ sourceDirectory.buildImage }}  
+              image: ${{ definition.value.buildImage }}  
             steps:
-            - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/validate.yml
+            - template: ${{ parameters.deployType }}/${{ coalesce(definition.value.packageAs, 'zip') }}/validate.yml
               parameters:
-                directory: ${{ sourceDirectory.path }}
+                directory: ${{ definition.value.path }}
 
   - stage: Deploy
     dependsOn:
@@ -126,8 +126,8 @@ stages:
           condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
           ${{ if ne(parameters.buildDirectories, '') }}:
             dependsOn: 
-            - ${{ each sourceDirectory in parameters.buildDirectories }}:
-              - Build_${{ replace(sourceDirectory.path, '/', '_') }}
+            - ${{ each definition in parameters.buildDirectories }}:
+              - Build_${{ replace(definition.value.path, '/', '_') }}
           ${{ if in(parameters.deployType, 'ADO') }}:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
@@ -161,25 +161,25 @@ stages:
 
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
-      - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - ${{ if or(eq(sourceDirectory.packageAs, 'image'), endsWith(sourceDirectory.buildImage, 'Dockerfile')) }}:
+      - ${{ each definition in parameters.buildDirectories }}:
+        - ${{ if or(eq(definition.value.packageAs, 'image'), endsWith(definition.value.buildImage, 'Dockerfile')) }}:
           - template: Docker/deploy.yml
             parameters:
-              directory: ${{ sourceDirectory.path }}
-              buildImage: ${{ sourceDirectory.buildImage }}
+              directory: ${{ definition.value.path }}
+              buildImage: ${{ definition.value.buildImage }}
               
-        - ${{ if and(ne(sourceDirectory.packageAs, 'image'), not(endsWith(sourceDirectory.buildImage, 'Dockerfile'))) }}:
-          - job: Build_${{ replace(sourceDirectory.path, '/', '_') }}
-            displayName: Build ${{ replace(sourceDirectory.path, '/', '_') }}
+        - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
+          - job: Build_${{ replace(definition.value.path, '/', '_') }}
+            displayName: Build ${{ replace(definition.value.path, '/', '_') }}
             ${{ if ne(parameters.terraformOutputEnv, '') }}:
               dependsOn: PublishTFOutputs
               condition: succeeded('PublishTFOutputs')
             container: 
-              image: ${{ sourceDirectory.buildImage }}  
+              image: ${{ definition.value.buildImage }}  
             steps:
-            - template: ${{ parameters.deployType }}/${{ coalesce(sourceDirectory.packageAs, 'zip') }}/build.yml
+            - template: ${{ parameters.deployType }}/${{ coalesce(definition.value.packageAs, 'zip') }}/build.yml
               parameters:
-                directory: ${{ sourceDirectory.path }}
+                directory: ${{ definition.value.path }}
 
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       - deployment: DeployArtifacts
