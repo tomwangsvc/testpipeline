@@ -4,8 +4,8 @@ parameters:
 - name: buildImage
   type: string
   default: ''
-- name: config
-  type: object
+- name: useStageConfig
+  type: string
   default: ''
 - name: pushImage
   type: boolean
@@ -18,7 +18,7 @@ parameters:
   default: 'Build'
 
 jobs:
-- ${{ if eq(parameters.config, '') }}:
+- ${{ if eq(parameters.useStageConfig, '') }}:
   - template: configure.yml
     parameters:
       directory: ${{ parameters.directory }}
@@ -28,14 +28,14 @@ jobs:
   displayName: ${{ parameters.jobNamePrefix }} ${{ replace(parameters.directory, '/', '_') }}
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
-  ${{ if eq(parameters.config, '') }}:
+  ${{ if eq(parameters.useStageConfig, '') }}:
     dependsOn: Configure_${{ replace(parameters.directory, '/', '_') }}
   variables:
-    BUILD_ARGUMENTS: $[ coalesce('${{ parameters.config.buildArguments }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
-    DOCKERFILE_PATH: $[ coalesce('${{ parameters.config.dockerfilePath }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
-    NPMRC_PATH: $[ coalesce('${{ parameters.config.npmrcPath }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
-    REPO_NAME: $[ coalesce('${{ parameters.config.repoName }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.repoName'], '') ]
-    RUNTIME: $[ coalesce('${{ parameters.config.runtime }}', dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
+    BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
+    DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
+    NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
+    REPO_NAME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.repoName' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.repoName'], '') ]
+    RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
   steps:
   - checkout: self
     submodules: true

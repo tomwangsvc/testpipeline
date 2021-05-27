@@ -11,3 +11,4 @@ jobs:
     directory: ${{ parameters.directory }}
     buildImage: ${{ parameters.buildImage }}
     condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+    jobNamePrefix: Validate
