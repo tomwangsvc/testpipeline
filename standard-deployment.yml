@@ -101,7 +101,7 @@ stages:
             parameters:
               directory: ${{ definition.value.path }}
               buildImage: ${{ definition.value.buildImage }}
-              repoName: ${{ definition.key }}
+              repoName: ${{ coalesce(definition.value.repoName, definition.key) }}
               
         - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
           - job: Validate_${{ definition.key }}
@@ -168,7 +168,7 @@ stages:
             parameters:
               directory: ${{ definition.value.path }}
               buildImage: ${{ definition.value.buildImage }}
-              repoName: ${{ definition.key }}
+              repoName: repoName: ${{ coalesce(definition.value.repoName, definition.key) }}
               
         - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
           - job: Build_${{ definition.key }}
