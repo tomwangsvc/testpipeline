@@ -1,21 +1,20 @@
 parameters:
-- name: directory
+- name: buildContext
   type: string
-- name: buildImage
+- name: dockerfilePath
   type: string
   default: ''
+- name: repoName
+  type: string
 
 jobs:
-- job: Configure_${{ replace(parameters.directory, '/', '_') }}
-  displayName: Configure ${{ replace(parameters.directory, '/', '_') }}
+- job: Configure_${{ parameters.repoName }}
+  displayName: Configure ${{ parameters.repoName }}
   steps:
   - checkout: self
     submodules: true
 
   - script: |
-      repoName=$(basename $sourcePath)
-      echo "##vso[task.setvariable variable=repoName;isOutput=true]${repoName}"
-
       echo "Checking Dockerfile at: ${dockerfilePath}"
       if test -f "$dockerfilePath"; then
         echo "##vso[task.setvariable variable=dockerfilePath;isOutput=true]${dockerfilePath}"
@@ -42,5 +41,5 @@ jobs:
     displayName: Configure Build
     name: ConfigureBuild
     env:
-      dockerfilePath: ${{ coalesce(parameters.buildImage, format('{0}/{1}', parameters.directory, 'Dockerfile')) }}
-      sourcePath: ${{ parameters.directory }}
+      dockerfilePath: ${{ coalesce(parameters.dockerfilePath, format('{0}/{1}', parameters.buildContext, 'Dockerfile')) }}
+      sourcePath: ${{ parameters.buildContext }}

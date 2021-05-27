@@ -1,9 +1,11 @@
 parameters:
-- name: directory
+- name: buildContext
   type: string
-- name: buildImage
+- name: dockerfilePath
   type: string
   default: ''
+- name: repoName
+  type: string
 - name: useStageConfig
   type: string
   default: ''
@@ -13,29 +15,27 @@ parameters:
 - name: condition
   type: string
   default: ''
-- name: jobNamePrefix
-  type: string
-  default: 'Build'
 
 jobs:
 - ${{ if eq(parameters.useStageConfig, '') }}:
   - template: configure.yml
     parameters:
-      directory: ${{ parameters.directory }}
-      buildImage: ${{ parameters.buildImage }}
+      buildContext: ${{ parameters.buildContext }}
+      dockerfilePath: ${{ parameters.dockerfilePath }}
+      repoName: ${{ parameters.repoName }}
 
-- job: ${{ parameters.jobNamePrefix }}_${{ replace(parameters.directory, '/', '_') }}
-  displayName: ${{ parameters.jobNamePrefix }} ${{ replace(parameters.directory, '/', '_') }}
+- job: Build_${{ parameters.repoName }}
+  displayName: Build ${{ parameters.repoName }}
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
   ${{ if eq(parameters.useStageConfig, '') }}:
-    dependsOn: Configure_${{ replace(parameters.directory, '/', '_') }}
+    dependsOn: Configure_${{ parameters.repoName }}
   variables:
-    BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
-    DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
-    NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
-    REPO_NAME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.repoName' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.repoName'], '') ]
-    RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.directory, '/', '_') }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ replace(parameters.directory, '/', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
+    BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.buildArguments'], '') ]
+    DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
+    NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
+    REPO_NAME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.repoName' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.repoName'], '') ]
+    RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ parameters.repoName }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ parameters.repoName }}'].outputs['ConfigureBuild.runtime'], '') ]
   steps:
   - checkout: self
     submodules: true
@@ -50,7 +50,7 @@ jobs:
     displayName: Docker Build
     inputs:
       command: build
-      buildContext: ${{ parameters.directory }}
+      buildContext: ${{ parameters.buildContext }}
       Dockerfile: $(DOCKERFILE_PATH)
       repository: $(REPO_NAME)
       tags: latest

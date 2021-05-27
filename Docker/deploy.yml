@@ -4,12 +4,14 @@ parameters:
 - name: buildImage
   type: string
   default: ''
+- name: repoName
+  type: string
 
 jobs:
 - template: build.yml
   parameters:
-    directory: ${{ parameters.directory }}
-    buildImage: ${{ parameters.buildImage }}
+    buildContext: ${{ parameters.directory }}
+    dockerfilePath: ${{ parameters.buildImage }}
+    repoName: ${{ parameters.repoName }}
     pushImage: true
-    jobNamePrefix: Build
     useStageConfig: Validate
