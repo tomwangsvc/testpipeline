@@ -1,21 +1,23 @@
 parameters:
 - name: directory
   type: string
+- name: artifactName
+  type: string
 
 steps:
 - task: Npm@1
-  displayName: Install ${{ replace(parameters.directory, '/', '_') }}
+  displayName: Install ${{ parameters.artifactName }}
   inputs:
     command: install
     workingDir: ${{ parameters.directory }}
 
-- script: zip -r "${stagingDir}/${lambdaName}.zip" .
-  displayName: Zip ${{ replace(parameters.directory, '/', '_') }}
+- script: zip -r "${stagingDir}/${artifactName}.zip" .
+  displayName: Zip ${{ parameters.artifactName }}
   workingDirectory: ${{ parameters.directory }}
   env:
-    lambdaName: ${{ replace(parameters.directory, '/', '_') }} 
+    artifactName: ${{ parameters.artifactName }} 
     stagingDir: $(Build.ArtifactStagingDirectory)
 
 - publish: $(Build.ArtifactStagingDirectory)
-  artifact: ${{ replace(parameters.directory, '/', '_') }}
-  displayName: Publish ${{ replace(parameters.directory, '/', '_') }}
+  artifact: ${{ parameters.artifactName }}
+  displayName: Publish ${{ parameters.artifactName }}

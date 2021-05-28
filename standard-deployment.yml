@@ -113,6 +113,7 @@ stages:
             - template: ${{ coalesce(definition.value.packageAs, 'zip') }}/validate.yml
               parameters:
                 directory: ${{ definition.value.path }}
+                artifactName: ${{ coalesce(definition.value.name, definition.key) }}
 
   - stage: Deploy
     dependsOn:
@@ -133,11 +134,6 @@ stages:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
           useTerraform: ${{ parameters.useTerraform }}
-          # ${{ if in(parameters.deployType, 'LambdaService') }}:
-          #   preDeploySteps: 
-          #   - template: ${{ parameters.deployType }}/deploy.yml
-          #     parameters:
-          #       buildDirectories: ${{ parameters.buildDirectories }}
 
       - template: Terraform/output-publish.yml
         parameters:
@@ -182,6 +178,7 @@ stages:
             - template: ${{ coalesce(definition.value.packageAs, 'zip') }}/build.yml
               parameters:
                 directory: ${{ definition.value.path }}
+                artifactName: ${{ coalesce(definition.value.name, definition.key) }}
 
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       - deployment: DeployArtifacts
