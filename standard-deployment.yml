@@ -134,6 +134,7 @@ stages:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
           useTerraform: ${{ parameters.useTerraform }}
+          buildDirectories: ${{ parameters.buildDirectories }}
 
       - template: Terraform/output-publish.yml
         parameters:
