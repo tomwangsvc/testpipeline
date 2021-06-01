@@ -1,0 +1,16 @@
+parameters:
+- name: directory
+  type: string
+- name: artifactName
+  type: string
+
+steps:  
+- task: Npm@1
+  displayName: Install ${{ parameters.artifactName }}
+  inputs:
+    command: install
+    workingDir: ${{ parameters.directory }}
+
+- script: npm test
+  displayName: Unit Test ${{ parameters.artifactName }}
+  workingDirectory: ${{ parameters.directory }}

@@ -25,7 +25,6 @@ parameters:
   - 'null'
   - ADO
   - ReactApp
-  - LambdaService
 # set terraform output variables to environment variables
 - name: terraformOutputEnv
   type: object
@@ -74,7 +73,7 @@ stages:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
 
-    - ${{ if and(notIn(parameters.deployType, 'null', 'LambdaService'), ne(parameters.useContainerImage, false)) }}:
+    - ${{ if and(ne(parameters.deployType, 'null'), ne(parameters.useContainerImage, false)) }}:
       # Identify the docker image for later stages
       - job: GetContainerImage
         displayName: Container Image
@@ -96,17 +95,25 @@ stages:
 
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
-      - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - template: helpers/container-job.yml
-          parameters: 
-            job: Validate_${{ sourceDirectory.name }}
-            displayName: Validate ${{ sourceDirectory.name }}
+      - ${{ each definition in parameters.buildDirectories }}:
+        - ${{ if or(eq(definition.value.packageAs, 'image'), endsWith(definition.value.buildImage, 'Dockerfile')) }}:
+          - template: Docker/validate.yml
+            parameters:
+              directory: ${{ definition.value.path }}
+              buildImage: ${{ definition.value.buildImage }}
+              repoName: ${{ coalesce(definition.value.name, definition.key) }}
+              
+        - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
+          - job: Validate_${{ definition.key }}
+            displayName: Validate ${{ definition.key }}
             condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
-            containerImage: ${{ sourceDirectory.image }}
+            container: 
+              image: ${{ definition.value.buildImage }}  
             steps:
-            - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/validate.yml
+            - template: ${{ coalesce(definition.value.packageAs, 'zip') }}/validate.yml
               parameters:
-                directory: ${{ sourceDirectory.name }}
+                directory: ${{ definition.value.path }}
+                artifactName: ${{ coalesce(definition.value.name, definition.key) }}
 
   - stage: Deploy
     dependsOn:
@@ -118,21 +125,16 @@ stages:
     - ${{ if ne(parameters.useTerraform, false) }}:
       - template: Terraform/deploy.yml
         parameters:
-          ${{ if notIn(parameters.deployType, 'LambdaService') }}:
-            condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
-          ${{ if in(parameters.deployType, 'LambdaService') }}:
+          condition: and(succeeded(), or(ne(variables.IS_INFRA_CHANGE, 'false'), ne(variables.IS_OUPUT_CHANGE, 'false')))
+          ${{ if ne(parameters.buildDirectories, '') }}:
             dependsOn: 
-            - ${{ each sourceDirectory in parameters.buildDirectories }}:
-              - Build_${{ sourceDirectory.name }}
+            - ${{ each definition in parameters.buildDirectories }}:
+              - Build_${{ coalesce(replace(definition.value.name, '-', '_'), definition.key) }}
           ${{ if in(parameters.deployType, 'ADO') }}:
             env:
               AZDO_PERSONAL_ACCESS_TOKEN: '$(AZDO_PERSONAL_ACCESS_TOKEN)'
           useTerraform: ${{ parameters.useTerraform }}
-          ${{ if in(parameters.deployType, 'LambdaService') }}:
-            preDeploySteps: 
-            - template: ${{ parameters.deployType }}/deploy.yml
-              parameters:
-                buildDirectories: ${{ parameters.buildDirectories }}
+          buildDirectories: ${{ parameters.buildDirectories }}
 
       - template: Terraform/output-publish.yml
         parameters:
@@ -157,19 +159,27 @@ stages:
 
     - ${{ if ne(parameters.buildDirectories, '') }}:
       # multi-source build  
-      - ${{ each sourceDirectory in parameters.buildDirectories }}:
-        - template: helpers/container-job.yml
-          parameters: 
-            job: Build_${{ sourceDirectory.name }}
-            displayName: Build ${{ sourceDirectory.name }}
+      - ${{ each definition in parameters.buildDirectories }}:
+        - ${{ if or(eq(definition.value.packageAs, 'image'), endsWith(definition.value.buildImage, 'Dockerfile')) }}:
+          - template: Docker/deploy.yml
+            parameters:
+              directory: ${{ definition.value.path }}
+              buildImage: ${{ definition.value.buildImage }}
+              repoName: ${{ coalesce(definition.value.name, definition.key) }}
+              
+        - ${{ if and(ne(definition.value.packageAs, 'image'), not(endsWith(definition.value.buildImage, 'Dockerfile'))) }}:
+          - job: Build_${{ definition.key }}
+            displayName: Build ${{ definition.key }}
             ${{ if ne(parameters.terraformOutputEnv, '') }}:
               dependsOn: PublishTFOutputs
               condition: succeeded('PublishTFOutputs')
-            containerImage: ${{ sourceDirectory.image }}
+            container: 
+              image: ${{ definition.value.buildImage }}  
             steps:
-            - template: ${{ parameters.deployType }}/${{ sourceDirectory.type }}/build.yml
+            - template: ${{ coalesce(definition.value.packageAs, 'zip') }}/build.yml
               parameters:
-                directory: ${{ sourceDirectory.name }}
+                directory: ${{ definition.value.path }}
+                artifactName: ${{ coalesce(definition.value.name, definition.key) }}
 
     - ${{ if in(parameters.deployType, 'ReactApp') }}:
       - deployment: DeployArtifacts

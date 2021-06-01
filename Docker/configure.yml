@@ -1,0 +1,45 @@
+parameters:
+- name: buildContext
+  type: string
+- name: dockerfilePath
+  type: string
+  default: ''
+- name: repoName
+  type: string
+
+jobs:
+- job: Configure_${{ replace(parameters.repoName, '-', '_') }}
+  displayName: Configure ${{ parameters.repoName }}
+  steps:
+  - checkout: self
+    submodules: true
+
+  - script: |
+      echo "Checking Dockerfile at: ${dockerfilePath}"
+      if test -f "$dockerfilePath"; then
+        echo "##vso[task.setvariable variable=dockerfilePath;isOutput=true]${dockerfilePath}"
+
+        runtime=$(grep -Po 'FROM \K[^:]*' $dockerfilePath | xargs -L 1 basename)
+        echo "Setting Runtime: ${runtime}"
+        echo "##vso[task.setvariable variable=runtime;isOutput=true]${runtime}"
+
+        case $runtime in
+          nodejs)
+            npmrcPath=${sourcePath}/.npmrc
+            if test -f "$npmrcPath"; then
+              echo "##vso[task.setvariable variable=npmrcPath;isOutput=true]${npmrcPath}"
+              buildArguments="--secret id=npmrc-package,src=${npmrcPath}"
+            fi
+            ;;
+        esac
+
+        echo "##vso[task.setvariable variable=buildArguments;isOutput=true]${buildArguments}"
+      else
+        echo "##vso[task.logissue type=error]Error: no Dockerfile found at ${dockerfilePath}"
+        exit 1
+      fi
+    displayName: Configure Build
+    name: ConfigureBuild
+    env:
+      dockerfilePath: ${{ coalesce(parameters.dockerfilePath, format('{0}/{1}', parameters.buildContext, 'Dockerfile')) }}
+      sourcePath: ${{ parameters.buildContext }}

@@ -8,12 +8,12 @@ parameters:
 - name: env 
   type: object
   default: ''
-- name: preDeploySteps
-  type: stepList
-  default: []
 - name: useTerraform
   type: string
   default: true
+- name: buildDirectories
+  type: object
+  default: ''
 
 jobs:
 - deployment: Terraform
@@ -27,7 +27,18 @@ jobs:
         - checkout: self
           persistCredentials: true
 
-        - ${{ parameters.preDeploySteps }}
+        - ${{ if ne(parameters.buildDirectories, '') }}:
+          - script: mkdir -p terraform/build/
+            displayName: Make Build Directory
+
+          - ${{ each definition in parameters.buildDirectories }}:
+            - ${{ if not(in(definition.value.packageAs, 'image')) }}:
+              - download: current
+                artifact: ${{ definition.key }}
+                displayName: Get ${{ definition.key }} Artifact
+
+              - script: mv $(Pipeline.Workspace)/${{ definition.key }}/* terraform/build
+                displayName: Stage ${{ definition.key }} Artifact
               
         - download: current
           artifact: tfplan-$(ENVIRONMENT_NAME)

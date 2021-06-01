@@ -1,0 +1,71 @@
+parameters:
+- name: buildContext
+  type: string
+- name: dockerfilePath
+  type: string
+  default: ''
+- name: repoName
+  type: string
+- name: useStageConfig
+  type: string
+  default: ''
+- name: pushImage
+  type: boolean
+  default: false
+- name: condition
+  type: string
+  default: ''
+
+jobs:
+- ${{ if eq(parameters.useStageConfig, '') }}:
+  - template: configure.yml
+    parameters:
+      buildContext: ${{ parameters.buildContext }}
+      dockerfilePath: ${{ parameters.dockerfilePath }}
+      repoName: ${{ parameters.repoName }}
+
+- job: Build_${{ replace(parameters.repoName, '-', '_') }}
+  displayName: Build ${{ parameters.repoName }}
+  ${{ if ne(parameters.condition, '') }}:
+    condition: ${{ parameters.condition }}
+  ${{ if eq(parameters.useStageConfig, '') }}:
+    dependsOn: Configure_${{ replace(parameters.repoName, '-', '_') }}
+  variables:
+    BUILD_ARGUMENTS: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.buildArguments' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.buildArguments'], '') ]
+    DOCKERFILE_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.dockerfilePath' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.dockerfilePath'], '') ]
+    NPMRC_PATH: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.npmrcPath' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.npmrcPath'], '') ]
+    RUNTIME: $[ coalesce(stageDependencies[ '${{ parameters.useStageConfig }}' ][ 'Configure_${{ replace(parameters.repoName, '-', '_') }}' ].outputs[ 'ConfigureBuild.runtime' ], dependencies['Configure_${{ replace(parameters.repoName, '-', '_') }}'].outputs['ConfigureBuild.runtime'], '') ]
+  steps:
+  - checkout: self
+    submodules: true
+
+  - task: npmAuthenticate@0
+    displayName: Authenticate NPM
+    condition: and(succeeded(), ne(variables.NPMRC_PATH, ''))
+    inputs:
+      workingFile: $(NPMRC_PATH)
+
+  - task: Docker@2
+    displayName: Docker Build
+    inputs:
+      command: build
+      buildContext: ${{ parameters.buildContext }}
+      Dockerfile: $(DOCKERFILE_PATH)
+      repository: ${{ parameters.repoName }}
+      tags: latest
+      arguments: $(BUILD_ARGUMENTS)
+    env:
+      DOCKER_BUILDKIT: 1
+  
+  - ${{ if eq(parameters.pushImage, true) }}:
+    - task: ECRPushImage@1
+      displayName: Push to ECR
+      inputs:
+        awsCredentials: $(AWS_SERVICE_CONNECTOR)
+        regionName: $(AWS_REGION)
+        imageSource: 'imagename'
+        sourceImageName: ${{ parameters.repoName }}
+        repositoryName: ${{ parameters.repoName }}
+        autoCreateRepository: true
+        forceDockerNamingConventions: true
+        outputVariable: image_output
