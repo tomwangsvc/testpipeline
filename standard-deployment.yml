@@ -185,7 +185,7 @@ stages:
       - deployment: DeployArtifacts
         displayName: Deploy ${{ parameters.deployType }}
         dependsOn: BuildSources
-        condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), succeeded('PublishTFOutputs')))
+        condition: succeeded('BuildSources')
         environment: $(ENVIRONMENT_NAME)
         strategy:
           runOnce:
