@@ -1,0 +1,26 @@
+# Deploy ReactApp to AWS Elastic Beanstalk
+# TODO: Expects ?S3_BUCKET_NAME? to be set in the environment
+steps:
+- checkout: none
+
+- template: ../Terraform/output-map.yml
+  parameters: 
+    terraformOutputEnv: 
+      S3_BUCKET_NAME: website_bucket 
+
+- download: current
+  artifact: react-app-$(ENVIRONMENT_NAME)
+  displayName: Get App Build
+
+- task: AWSShellScript@1
+  displayName: Sync S3 Bucket
+  env:
+    S3_BUCKET_NAME: $(S3_BUCKET_NAME.value)
+  inputs:
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
+    scriptType: inline
+    inlineScript: 'aws s3 sync . s3://${S3_BUCKET_NAME} --delete --acl public-read'
+    disableAutoCwd: true
+    workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
+    failOnStandardError: true
