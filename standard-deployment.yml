@@ -25,6 +25,7 @@ parameters:
   - 'null'
   - ADO
   - ReactApp
+  - ReactAppEB
 # set terraform output variables to environment variables
 - name: terraformOutputEnv
   type: object
