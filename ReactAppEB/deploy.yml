@@ -12,15 +12,26 @@ steps:
   artifact: react-app-$(ENVIRONMENT_NAME)
   displayName: Get App Build
 
-- task: AWSShellScript@1
-  displayName: Sync S3 Bucket
-  env:
-    S3_BUCKET_NAME: $(S3_BUCKET_NAME.value)
+
+# - task: AWSShellScript@1
+#   displayName: Sync S3 Bucket
+#   env:
+#     S3_BUCKET_NAME: $(S3_BUCKET_NAME.value)
+#   inputs:
+#     awsCredentials: $(AWS_SERVICE_CONNECTOR)
+#     regionName: $(AWS_REGION)
+#     scriptType: inline
+#     inlineScript: 'aws s3 sync . s3://${S3_BUCKET_NAME} --delete --acl public-read'
+#     disableAutoCwd: true
+#     workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
+#     failOnStandardError: true
+
+
+- task: BeanstalkDeployApplication@1
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
-    regionName: $(AWS_REGION)
-    scriptType: inline
-    inlineScript: 'aws s3 sync . s3://${S3_BUCKET_NAME} --delete --acl public-read'
-    disableAutoCwd: true
-    workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
-    failOnStandardError: true
+    regionName: 'ap-southeast-2'
+    applicationName: 'ReactAppEB'
+    environmentName: 'BAU_DEV'
+    applicationType: 'Node'
+    description: 'Test deploy react to EB'
