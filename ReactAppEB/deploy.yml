@@ -34,4 +34,5 @@ steps:
     applicationName: 'labs-website-dev-dug'
     environmentName: 'Labs-Website-Dev-Dug'
     applicationType: 'version'
+    versionLabel: '0.0.1'
     description: 'Test deploy react to EB'
