@@ -27,12 +27,9 @@ steps:
 #     failOnStandardError: true
 
 
-- task: BeanstalkDeployApplication@1
-  inputs:
-    awsCredentials: $(AWS_SERVICE_CONNECTOR)
-    regionName: 'ap-southeast-2'
-    applicationName: 'labs-website-dev-dug'
-    environmentName: 'Labs-Website-Dev-Dug'
-    applicationType: 'version'
-    versionLabel: '0.0.1'
-    description: 'Test deploy react to EB'
+# - task: BeanstalkDeployApplication@1
+#   inputs:
+#     awsCredentials: $(AWS_SERVICE_CONNECTOR)
+#     regionName: 'ap-southeast-2'
+#     applicationName: 'sc-lab-site'
+#     environmentName: 'sc-lab-siteenv'
