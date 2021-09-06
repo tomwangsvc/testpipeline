@@ -199,6 +199,23 @@ stages:
                 ${{ if ne(parameters.terraformOutputEnv, '') }}:
                   parameters:
                     terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
+    - ${{ if in(parameters.deployType, 'ReactAppEB') }}:
+      - deployment: DeployArtifacts
+        displayName: Deploy ${{ parameters.deployType }}
+        dependsOn: 
+        - BuildSources
+        - Terraform
+        - PublishTFOutputs
+        condition: and(succeeded('BuildSources'), or(succeeded('Terraform'), succeeded('PublishTFOutputs')))
+        environment: $(ENVIRONMENT_NAME)
+        strategy:
+          runOnce:
+            deploy:  
+              steps:
+              - template: ${{ parameters.deployType }}/deploy.yml
+                ${{ if ne(parameters.terraformOutputEnv, '') }}:
+                  parameters:
+                    terraformOutputEnv: ${{ parameters.terraformOutputEnv }}
 
   - stage: Accept
     jobs:
