@@ -31,7 +31,7 @@ steps:
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: 'ap-southeast-2'
-    applicationName: 'ReactAppEB'
-    environmentName: 'BAU_DEV'
-    applicationType: 'Node'
+    applicationName: 'labs-website-dev-dug'
+    environmentName: 'Labs-Website-Dev-Dug'
+    applicationType: 'version'
     description: 'Test deploy react to EB'
