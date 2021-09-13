@@ -49,7 +49,7 @@ steps:
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: $(AWS_REGION)
-    applicationName: 'sc-labs-dev'
+    applicationName: 'sc-labs-react'
     applicationType: 's3'
     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
