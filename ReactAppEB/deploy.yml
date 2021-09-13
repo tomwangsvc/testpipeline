@@ -6,7 +6,7 @@ steps:
 - template: ../Terraform/output-map.yml
   parameters: 
     terraformOutputEnv: 
-      S3_BUCKET_NAME: website_bucket 
+      S3_BUCKET_NAME: reactapp_bucket 
 
 - download: current
   artifact: react-app-$(ENVIRONMENT_NAME)
