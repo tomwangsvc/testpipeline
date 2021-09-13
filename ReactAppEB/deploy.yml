@@ -1,16 +1,34 @@
 # Deploy ReactApp to AWS Elastic Beanstalk
 # TODO: Expects ?S3_BUCKET_NAME? to be set in the environment
 steps:
-- checkout: none
+- checkout: self
+
+- task: npmAuthenticate@0
+  displayName: Authenticate NPM
+  condition: ne(variables.CACHE_RESTORED, 'true')
+  inputs:
+    workingFile: .npmrc
 
 - template: ../Terraform/output-map.yml
   parameters: 
     terraformOutputEnv: 
-      S3_BUCKET_NAME: reactapp_bucket 
+      S3_BUCKET_NAME: eb_bundle_bucket
 
-- download: current
-  artifact: react-app-$(ENVIRONMENT_NAME)
-  displayName: Get App Build
+# - download: current
+#   artifact: react-app-$(ENVIRONMENT_NAME)
+#   displayName: Get App Build
+
+#TODO: Get npm auth creds onto EB
+#TODO: get ENV vars onto EB
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: $(Pipeline.Workspace)/s
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: $(Pipeline.Workspace)/$(S3_BUCKET_NAME.value).zip
+    replaceExistingArchive: true
+
 
 
 - task: AWSShellScript@1
