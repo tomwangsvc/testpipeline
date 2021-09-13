@@ -41,13 +41,27 @@ steps:
     scriptType: inline
     inlineScript: 'aws s3 sync . s3://${S3_BUCKET_NAME} --delete --acl public-read'
     disableAutoCwd: true
-    workingDirectory: $(Pipeline.Workspace)/react-app-$(ENVIRONMENT_NAME)
+    workingDirectory: $(Pipeline.Workspace)
     failOnStandardError: true
 
-
-- task: BeanstalkDeployApplication@1
+- task: BeanstalkCreateApplicationVersion@1
+  displayName: Create EB Application Version
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
-    regionName: 'ap-southeast-2'
+    regionName: $(AWS_REGION)
+    applicationName: 'sc-labs-dev'
+    applicationType: 's3'
+    deploymentBundleBucket: $(S3_BUCKET_NAME.value)
+    deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
+    description: 'Labs Website version'
+
+- task: BeanstalkDeployApplication@1
+  displayName: Deploy EB Application Version
+  inputs:
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
     applicationName: 'sc-labs-react'
-    environmentName: 'SC-labs-react"'
+    environmentName: 'SC-labs-react'
+    applicationType: 's3'
+    deploymentBundleBucket: $(S3_BUCKET_NAME.value)
+    deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
