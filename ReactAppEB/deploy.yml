@@ -1,0 +1,61 @@
+# Deploy ReactApp to AWS Elastic Beanstalk
+# Expects S3_BUCKET_NAME to be set in the environment
+# TODO:get EB applicationName and environmentName to be set in environment
+steps:
+- checkout: self
+
+- task: npmAuthenticate@0
+  displayName: Authenticate NPM
+  condition: ne(variables.CACHE_RESTORED, 'true')
+  inputs:
+    workingFile: .npmrc
+
+- template: ../Terraform/output-map.yml
+  parameters:
+    terraformOutputEnv:
+      S3_BUCKET_NAME: eb_bundle_bucket
+
+#TODO: get ENV vars onto EB. Currently done in the code base using ./ebextensions configs.
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: $(Pipeline.Workspace)/s
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: $(Pipeline.Workspace)/$(S3_BUCKET_NAME.value).zip
+    replaceExistingArchive: true
+
+- task: AWSShellScript@1
+  displayName: Sync S3 Bucket
+  env:
+    S3_BUCKET_NAME: $(S3_BUCKET_NAME.value)
+  inputs:
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
+    scriptType: inline
+    inlineScript: 'aws s3 sync . s3://${S3_BUCKET_NAME} --delete --acl public-read'
+    disableAutoCwd: true
+    workingDirectory: $(Pipeline.Workspace)
+    failOnStandardError: true
+
+- task: BeanstalkCreateApplicationVersion@1
+  displayName: Create EB Application Version
+  inputs:
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
+    applicationName: 'labs-website' #TODO: make dynamic from env vars
+    applicationType: 's3'
+    deploymentBundleBucket: $(S3_BUCKET_NAME.value)
+    deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
+    description: 'Labs Website' #TODO: make dynamic from env vars
+
+- task: BeanstalkDeployApplication@1
+  displayName: Deploy EB Application Version
+  inputs:
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
+    applicationName: 'labs-website' #TODO: make dynamic from env vars
+    environmentName: 'Labs-Website' #TODO: make dynamic from env vars
+    applicationType: 's3'
+    deploymentBundleBucket: $(S3_BUCKET_NAME.value)
+    deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
