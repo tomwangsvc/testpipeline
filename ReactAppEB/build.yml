@@ -33,6 +33,10 @@ steps:
   displayName: Install Dependencies
   condition: ne(variables.CACHE_RESTORED, 'true')
 
+#this build step is not needed as EB will build the app once the code is deployed to the EB instance.
+#this ius purposefully here so that we get early warning about build errors without waiting for 
+#the code to be deployed to EB and then get the error there (which won't be visible to the pipeline)
+#and we get 502 gateway error because the app was not build and could not start if there are build errors.
 - script: ./node_modules/.bin/env-cmd -f .env.${ENVIRONMENT_NAME} npm run build
   displayName: Build App
   ${{ if ne(parameters.terraformOutputEnv, '') }}:
@@ -41,6 +45,7 @@ steps:
         ${{ if startsWith(output.Key, 'REACT_APP_') }}:
           ${{ output.Key }}: $(${{ output.Key }}.value)
 
-- publish: $(System.DefaultWorkingDirectory)/build/
-  artifact: react-app-$(ENVIRONMENT_NAME)
-  displayName: Publish App Artifact
+#no need to publish the build package as we deploy the entire codebase onto EB.
+# - publish: $(System.DefaultWorkingDirectory)/build/
+#   artifact: react-app-$(ENVIRONMENT_NAME)
+#   displayName: Publish App Artifact
