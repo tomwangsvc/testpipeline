@@ -41,6 +41,6 @@ steps:
         ${{ if startsWith(output.Key, 'REACT_APP_') }}:
           ${{ output.Key }}: $(${{ output.Key }}.value)
 
-- publish: $(System.DefaultWorkingDirectory)/build/
-  artifact: react-app-$(ENVIRONMENT_NAME)
-  displayName: Publish App Artifact
+# - publish: $(System.DefaultWorkingDirectory)/build/
+#   artifact: react-app-$(ENVIRONMENT_NAME)
+#   displayName: Publish App Artifact
