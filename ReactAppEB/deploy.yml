@@ -12,7 +12,9 @@ steps:
 - template: ../Terraform/output-map.yml
   parameters: 
     terraformOutputEnv: 
-      S3_BUCKET_NAME: reactapp_bucket
+      S3_BUCKET_NAME: reactapp_bucket      
+      EB_ENV_NAME:    eb_environment
+      EB_APP_NAME:    eb_application
 
 # - download: current
 #   artifact: react-app-$(ENVIRONMENT_NAME)
@@ -49,7 +51,7 @@ steps:
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: $(AWS_REGION)
-    applicationName: 'sc-labs-react'
+    applicationName: $(EB_APP_NAME.value)
     applicationType: 's3'
     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
@@ -60,8 +62,8 @@ steps:
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: $(AWS_REGION)
-    applicationName: 'sc-labs-react'
-    environmentName: 'SC-labs-react'
+    applicationName: $(EB_APP_NAME.value)
+    environmentName: $(EB_ENV_NAME.value)
     applicationType: 's3'
     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
