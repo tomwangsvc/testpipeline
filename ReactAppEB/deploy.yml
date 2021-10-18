@@ -12,7 +12,7 @@ steps:
 - template: ../Terraform/output-map.yml
   parameters: 
     terraformOutputEnv: 
-      S3_BUCKET_NAME: reactapp_bucket      
+      S3_BUCKET_NAME: eb_bundle_bucket     
       EB_ENV_NAME:    eb_environment
       EB_APP_NAME:    eb_application
 
@@ -55,7 +55,7 @@ steps:
     applicationType: 's3'
     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
-    description: 'Labs Website version'
+#    description: 'Labs Website version' TO DO:Future enhancement is to add versioning 
 
 - task: BeanstalkDeployApplication@1
   displayName: Deploy EB Application Version
