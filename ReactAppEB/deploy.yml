@@ -1,5 +1,6 @@
 # Deploy ReactApp to AWS Elastic Beanstalk
 # TODO: Expects ?S3_BUCKET_NAME? to be set in the environment
+# TODO:get EB applicationName and environmentName to be set in environment
 steps:
 - checkout: self
 
@@ -16,12 +17,7 @@ steps:
       EB_ENV_NAME:    eb_environment
       EB_APP_NAME:    eb_application
 
-# - download: current
-#   artifact: react-app-$(ENVIRONMENT_NAME)
-#   displayName: Get App Build
-
-#TODO: Get npm auth creds onto EB
-#TODO: get ENV vars onto EB
+#TODO: get ENV vars onto EB. Currently done in the code base using ./ebextensions configs.
 
 - task: ArchiveFiles@2
   inputs:
@@ -30,8 +26,6 @@ steps:
     archiveType: 'zip'
     archiveFile: $(Pipeline.Workspace)/$(S3_BUCKET_NAME.value).zip
     replaceExistingArchive: true
-
-
 
 - task: AWSShellScript@1
   displayName: Sync S3 Bucket
@@ -55,7 +49,6 @@ steps:
     applicationType: 's3'
     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
-#    description: 'Labs Website version' TO DO:Future enhancement is to add versioning 
 
 - task: BeanstalkDeployApplication@1
   displayName: Deploy EB Application Version
