@@ -40,15 +40,17 @@ steps:
     workingDirectory: $(Pipeline.Workspace)
     failOnStandardError: true
 
-- task: BeanstalkCreateApplicationVersion@1
-  displayName: Create EB Application Version
-  inputs:
-    awsCredentials: $(AWS_SERVICE_CONNECTOR)
-    regionName: $(AWS_REGION)
-    applicationName: $(EB_APP_NAME.value)
-    applicationType: 's3'
-    deploymentBundleBucket: $(S3_BUCKET_NAME.value)
-    deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
+#Not required as the  next step is using application type S3, this step is just creating an extra applicaiton version. Might be useful in the future if we wanted to control application version
+# - task: BeanstalkCreateApplicationVersion@1
+#   displayName: Create EB Application Version
+#   inputs:
+#     awsCredentials: $(AWS_SERVICE_CONNECTOR)
+#     regionName: $(AWS_REGION)
+#     applicationName: $(EB_APP_NAME.value)
+#     applicationType: 's3'
+#     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
+#     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
+#     description: 'Labs Website' #TODO: make dynamic from env vars
 
 - task: BeanstalkDeployApplication@1
   displayName: Deploy EB Application Version
