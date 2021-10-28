@@ -27,7 +27,7 @@ steps:
     archiveFile: $(Pipeline.Workspace)/$(S3_BUCKET_NAME.value).zip
     replaceExistingArchive: true
 
-- task: AWSShellScript@2
+- task: AWSShellScript@1
   displayName: Get caller idenity
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
@@ -36,7 +36,7 @@ steps:
     inlineScript: 'aws sts get-caller-identity'
     disableAutoCwd: true
 
-- task: AWSShellScript@1
+- task: AWSShellScript@2
   displayName: Sync S3 Bucket
   env:
     S3_BUCKET_NAME: $(S3_BUCKET_NAME.value)
