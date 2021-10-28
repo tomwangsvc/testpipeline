@@ -36,6 +36,10 @@ steps:
     inlineScript: 'aws sts get-caller-identity'
     disableAutoCwd: true
 
+- task: CmdLine@2
+  inputs:
+    script: 'printenv'
+
 - task: AWSShellScript@1
   displayName: Sync S3 Bucket
   env:
