@@ -1,5 +1,5 @@
 # Deploy ReactApp to AWS Elastic Beanstalk
-# TODO: Expects ?S3_BUCKET_NAME? to be set in the environment
+# Expects S3_BUCKET_NAME to be set in the environment
 # TODO:get EB applicationName and environmentName to be set in environment
 steps:
 - checkout: self
@@ -11,11 +11,9 @@ steps:
     workingFile: .npmrc
 
 - template: ../Terraform/output-map.yml
-  parameters: 
-    terraformOutputEnv: 
-      S3_BUCKET_NAME: eb_bundle_bucket     
-      EB_ENV_NAME:    eb_environment
-      EB_APP_NAME:    eb_application
+  parameters:
+    terraformOutputEnv:
+      S3_BUCKET_NAME: eb_bundle_bucket
 
 #TODO: get ENV vars onto EB. Currently done in the code base using ./ebextensions configs.
 
@@ -40,25 +38,24 @@ steps:
     workingDirectory: $(Pipeline.Workspace)
     failOnStandardError: true
 
-#Not required as the  next step is using application type S3, this step is just creating an extra applicaiton version. Might be useful in the future if we wanted to control application version
-# - task: BeanstalkCreateApplicationVersion@1
-#   displayName: Create EB Application Version
-#   inputs:
-#     awsCredentials: $(AWS_SERVICE_CONNECTOR)
-#     regionName: $(AWS_REGION)
-#     applicationName: $(EB_APP_NAME.value)
-#     applicationType: 's3'
-#     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
-#     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
-#     description: 'Labs Website' #TODO: make dynamic from env vars
+- task: BeanstalkCreateApplicationVersion@1
+  displayName: Create EB Application Version
+  inputs:
+    awsCredentials: $(AWS_SERVICE_CONNECTOR)
+    regionName: $(AWS_REGION)
+    applicationName: 'labs-website' #TODO: make dynamic from env vars
+    applicationType: 's3'
+    deploymentBundleBucket: $(S3_BUCKET_NAME.value)
+    deploymentBundleKey: $(S3_BUCKET_NAME.value).zip
+    description: 'Labs Website' #TODO: make dynamic from env vars
 
 - task: BeanstalkDeployApplication@1
   displayName: Deploy EB Application Version
   inputs:
     awsCredentials: $(AWS_SERVICE_CONNECTOR)
     regionName: $(AWS_REGION)
-    applicationName: $(EB_APP_NAME.value)
-    environmentName: $(EB_ENV_NAME.value)
+    applicationName: 'labs-website' #TODO: make dynamic from env vars
+    environmentName: 'Labs-Website' #TODO: make dynamic from env vars
     applicationType: 's3'
     deploymentBundleBucket: $(S3_BUCKET_NAME.value)
     deploymentBundleKey: $(S3_BUCKET_NAME.value).zip

@@ -6,9 +6,9 @@ parameters:
 steps:
 - ${{ if ne(parameters.terraformOutputEnv, '') }}:
   - template: ../Terraform/output-map.yml
-    parameters: 
+    parameters:
       terraformOutputEnv:
-        # map Terraform outputs to respective REACT_APP env variables 
+        # map Terraform outputs to respective REACT_APP env variables
         ${{ each output in parameters.terraformOutputEnv }}:
           ${{ if startsWith(output.Key, 'REACT_APP_') }}:
             ${{ output.Key }}: ${{ output.Value }}

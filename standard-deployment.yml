@@ -202,7 +202,7 @@ stages:
     - ${{ if in(parameters.deployType, 'ReactAppEB') }}:
       - deployment: DeployArtifacts
         displayName: Deploy ${{ parameters.deployType }}
-        dependsOn: 
+        dependsOn:
         - BuildSources
         - Terraform
         - PublishTFOutputs
@@ -210,7 +210,7 @@ stages:
         environment: $(ENVIRONMENT_NAME)
         strategy:
           runOnce:
-            deploy:  
+            deploy:
               steps:
               - template: ${{ parameters.deployType }}/deploy.yml
                 ${{ if ne(parameters.terraformOutputEnv, '') }}:
