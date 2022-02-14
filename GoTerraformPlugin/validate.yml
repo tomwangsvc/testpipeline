@@ -1,0 +1,39 @@
+parameters:
+  - name: npmWorkingDir
+    type: string
+    default: ""
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "16.x"
+
+  - task: Cache@2
+    displayName: Check Dependency Cache
+    inputs:
+      ${{ if ne(parameters.npmWorkingDir, '') }}:
+        key: npm | $(Agent.OS) | $(System.DefaultWorkingDirectory)/${{ parameters.npmWorkingDir }}/package-lock.json
+        path: $(System.DefaultWorkingDirectory)/${{ parameters.npmWorkingDir }}/node_modules
+      ${{ else }}:
+        key: npm | $(Agent.OS) | package-lock.json
+        path: node_modules
+      cacheHitVar: CACHE_RESTORED
+      restoreKeys: |
+        npm | $(Agent.OS)
+
+  - task: npmAuthenticate@0
+    displayName: Authenticate NPM
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    inputs:
+      ${{ if ne(parameters.npmWorkingDir, '') }}:
+        workingFile: $(System.DefaultWorkingDirectory)/${{ parameters.npmWorkingDir }}/.npmrc
+      ${{ else }}:
+        workingFile: .npmrc
+
+  - task: Npm@1
+    displayName: Install Dependencies
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    inputs:
+      command: "ci"
+      ${{ if ne(parameters.npmWorkingDir, '') }}:
+        workingDir: $(System.DefaultWorkingDirectory)/${{ parameters.npmWorkingDir }}

@@ -1,0 +1,68 @@
+parameters:
+  - name: defaultBranchName
+    type: string
+    default: "master"
+  - name: deployType
+    type: string
+    default: "null"
+    values:
+      - "null"
+      - GoTerraformPlugin
+  # use a Docker container to run Validate and Build stages
+  # expects a named image, otherwise uses your repo's devcontainer (default)
+  - name: useContainerImage
+    type: string
+    default: true
+  # the directory of npm dependencies (where the package.json and package-lock.json files are)
+  - name: npmWorkingDir
+    type: string
+    default: ""
+  # the version of the artifact
+  - name: artifactVersion
+    type: string
+    default: ""
+
+variables:
+  - name: CI
+    value: true
+
+stages:
+  - stage: Validate
+    jobs:
+      # Identify the docker image for later stages
+      - job: GetContainerImage
+        displayName: Container Image
+        steps:
+          - template: helpers/container-get-image.yml
+            parameters:
+              useContainerImage: ${{ parameters.useContainerImage }}
+
+      # single-source build
+      - template: helpers/container-job.yml
+        parameters:
+          job: ValidateSources
+          displayName: Source Code
+          dependsOn: GetContainerImage
+          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
+
+          steps:
+            - template: ${{ parameters.deployType }}/validate.yml
+              ${{ if eq(parameters.deployType, 'GoTerraformPlugin') }}:
+                parameters:
+                  npmWorkingDir: ${{ parameters.npmWorkingDir }}
+
+  - stage: Deploy
+    dependsOn:
+      - Validate
+    jobs:
+      # single-source build
+      - template: helpers/container-job.yml
+        parameters:
+          job: BuildSources
+          displayName: Build ${{ parameters.deployType }}
+
+          steps:
+            - template: ${{ parameters.deployType }}/build.yml
+              ${{ if eq(parameters.deployType, 'GoTerraformPlugin') }}:
+                parameters:
+                  artifactVersion: ${{ parameters.artifactVersion }}

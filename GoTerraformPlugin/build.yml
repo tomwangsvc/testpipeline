@@ -1,0 +1,43 @@
+parameters:
+  - name: artifactVersion
+    type: string
+    default: ""
+
+steps:
+  - task: GoTool@0
+    displayName: "Use Go 1.16.2"
+    inputs:
+      version: "1.16.2"
+
+  - task: Go@0
+    displayName: "Go Build"
+    inputs:
+      command: "build"
+      arguments: "-o $(Build.Repository.Name)"
+      workingDirectory: $(System.DefaultWorkingDirectory)
+
+  - task: CopyFiles@2
+    displayName: "Copy Artifact"
+    inputs:
+      SourceFolder: $(System.DefaultWorkingDirectory)
+      Contents: $(Build.Repository.Name)
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+
+  - task: PublishPipelineArtifact@1
+    displayName: "Stage Artifact"
+    inputs:
+      targetPath: $(Build.ArtifactStagingDirectory)
+      artifactName: $(Build.Repository.Name)
+
+  - task: UniversalPackages@0
+    displayName: Publish Artifact ${{ parameters.artifactVersion }}
+    inputs:
+      command: publish
+      publishDirectory: $(Build.ArtifactStagingDirectory)
+      vstsFeedPublish: DevelopmentChapter
+      vstsFeedPackagePublish: $(Build.Repository.Name)
+      ${{ if ne(parameters.artifactVersion, '') }}:
+        versionOption: custom
+        versionPublish: ${{ parameters.artifactVersion }}
+      ${{ else }}:
+        versionOption: patch
