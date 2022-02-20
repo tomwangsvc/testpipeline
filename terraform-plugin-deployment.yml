@@ -43,7 +43,6 @@ stages:
           job: ValidateSources
           displayName: Source Code
           dependsOn: GetContainerImage
-          condition: in(variables.ENVIRONMENT_NAME, 'DEV', 'QA')
 
           steps:
             - template: ${{ parameters.deployType }}/validate.yml
