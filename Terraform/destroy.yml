@@ -24,4 +24,5 @@ jobs:
             provider: $(TF_PROVIDER)
             command: destroy
             workingDirectory: $(TF_PATH)
+            commandOptions: -var-file=$(TF_VAR_FILE)
             environmentServiceNameAWS: $(TF_SERVICE_CONNECTOR)
