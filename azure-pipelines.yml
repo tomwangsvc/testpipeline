@@ -1,0 +1,114 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: DevOps/pipeline-templates
+    ref: refs/heads/feature/split-pipeline-msrs-2196 # a temporary link until the changes are merged into master
+    # or 'refs/tags/v0.x' (avoid breaking chainges)
+    # see https://dev.azure.com/WatercareServicesLimited/DevOps/_git/pipeline-templates/tags
+
+## runtime parameters
+### these can be used to modify the default pipeline behaviour
+### when manually queuing runs from the web interface
+parameters:
+- name: environment
+  displayName: Environment
+  type: string
+  default: (auto)
+  values:
+  - (auto)
+  - DEV
+  - QA
+  - UAT
+  - PRD
+- name: destroy
+  displayName: Destroy Resources?
+  type: boolean
+  default: false
+
+extends:
+  template: standard-deployment.yml@templates
+  parameters:
+    chooseEnvironment: ${{ parameters.environment }}
+    destroy: ${{ parameters.destroy }}
+    buildDirectories:
+      ## lambda build and test configuration for the pipeline
+      ##
+      ## path:      path to lambda directory relative to the repo root
+      ## packageAs: 'image' to build from Dockerfile
+      ##            'zip' to package with NodeJS
+      ##            defaults to 'zip' if omitted
+      ## buildImage: path to Dockerfile relative to the repo root
+      ##             path to Docker image repo if packageAs='zip' to test/build the artifact
+      ##             defaults to '<path>/Dockerfile' (looks for 'Dockerfile' in lambda directory)
+      ## customNodeJsScript: a name of a NodeJS script listed in `scripts` property of package.json
+      ##                     it will be called by the pipeline for every package that specifies it
+      ##                     after a successful DEPLOY stage
+      ##                     no action is taken if this property is omitted
+      putWorkOrder:
+        path: lambdas/putWorkOrder
+        buildImage: lambci/lambda:build-nodejs12.x
+      putMaintenanceOrder:
+        path: lambdas/putMaintenanceOrder
+        buildImage: lambci/lambda:build-nodejs12.x
+      #/* ***************************
+      #INT-69 New API to Update Planned Maintenance from Contractor to WSL
+      #*************************** */
+      putPlannedMaintenanceOrder: 
+        path: lambdas/putPlannedMaintenanceOrder
+        buildImage: lambci/lambda:build-nodejs12.x
+      postWorkOrderCost:
+        path: lambdas/postWorkOrderCost
+        buildImage: lambci/lambda:build-nodejs12.x
+      postWorkOrder:
+        path: lambdas/postWorkOrder
+        buildImage: lambci/lambda:build-nodejs12.x
+      postConnectionWork:
+        path: lambdas/postConnectionWork
+        buildImage: lambci/lambda:build-nodejs12.x
+      postConnectionEstimate:
+        path: lambdas/postConnectionEstimate
+        buildImage: lambci/lambda:build-nodejs12.x
+      postConnectionCost:
+        path: lambdas/postConnectionCost
+        buildImage: lambci/lambda:build-nodejs12.x
+      postConnectionAsset:
+        path: lambdas/postConnectionAsset
+        buildImage: lambci/lambda:build-nodejs12.x
+      integration_msn_eam_complete_pm_workorder_writer:
+        path: lambdas/integration_msn_eam_complete_pm_workorder_writer
+        buildImage: lambci/lambda:build-nodejs12.x
+      integration_msn_eam_create_workorder_parts_writer:
+        path: lambdas/integration_msn_eam_create_workorder_parts_writer
+        buildImage: mlupin/docker-lambda:nodejs16.x-build
+      integration_msn_eam_update_work_order_cost_writer:
+        path: lambdas/integration_msn_eam_update_work_order_cost_writer
+        buildImage: lambci/lambda:build-nodejs12.x
+      integration_msn_eam_update_pm_work_order_writer:
+        path: lambdas/integration_msn_eam_update_pm_work_order_writer
+        buildImage: lambci/lambda:build-nodejs12.x
+      integration_msn_eam_create_workorder_labor_writer:
+        path: lambdas/integration_msn_eam_create_workorder_labor_writer
+        buildImage: mlupin/docker-lambda:nodejs16.x-build
+        customNodeJsScript: check-env
+      # postClickUpdate:
+      #   path: lambdas/postClickUpdate
+      #   buildImage: lambci/lambda:build-nodejs12.x
+      # postClickRar:
+      #   path: lambdas/postClickRar
+      #   buildImage: lambci/lambda:build-nodejs12.x
+      # postClickCompleteTask:
+      #   path: lambdas/postClickCompleteTask
+      #   buildImage: lambci/lambda:build-nodejs12.x
+      # postClickAttach:
+      #   path: lambdas/postClickAttach
+      #   buildImage: lambci/lambda:build-nodejs12.x
+    ## optional parameters
+    # defaultBranchName: main # default is 'master'
+    # useTerraform: 0.14.1 # forces a specific version (default is whatever is installed on pipeline agent)
